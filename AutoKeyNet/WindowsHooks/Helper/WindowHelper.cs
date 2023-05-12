@@ -47,8 +47,10 @@ internal static class WindowHelper
             if (handle == nint.Zero)
                 return null;
             GetWindowThreadProcessId(handle, out var processId);
-            var p = Process.GetProcessById((int)processId);
-            return p.MainModule?.ModuleName;
+            //Process p = Process.GetProcessById((int)processId);
+            Process[] processlist = Process.GetProcesses();
+            Process? p = processlist.FirstOrDefault(pr => pr.Id == (int)processId);
+            return p?.MainModule?.ModuleName;
         }
         catch (Win32Exception ex)
         {
