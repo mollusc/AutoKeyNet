@@ -31,4 +31,23 @@ public static class OutlookApplication
             new Outlook.Application()?.ActiveExplorer()
                 .Search(text, Outlook.OlSearchScope.olSearchScopeCurrentFolder);
     }
+
+    public static string? GetRecipientCurrentWindow()
+    {
+        if (Process.GetProcessesByName("OUTLOOK").Any())
+        {
+            var application = new Outlook.Application();
+            Outlook.Inspector inspector = application.ActiveInspector();
+            string? to = null;
+            if (application.ActiveExplorer().ActiveInlineResponse is Outlook.MailItem explorerMailItem)
+                to = explorerMailItem.To;
+            if (inspector?.CurrentItem is Outlook.MailItem inspectorMailItem)
+                to = inspectorMailItem.To;
+
+            if (!string.IsNullOrEmpty(to) && to.Split(';').Length > 1)
+                return null;
+            return to;
+        }
+        return null;
+    }
 }

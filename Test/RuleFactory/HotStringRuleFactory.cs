@@ -17,7 +17,7 @@ internal class HotStringRuleFactory : BaseRuleFactory
     {
         var rules = new List<BaseRuleRecord>()
         {
-            new HotStringRuleRecord("дд", "Добрый день!"),
+            new HotStringRuleRecord("ддд", "Добрый день!"),
             new HotStringRuleRecord("сс", "Согласовано"),
             new HotStringRuleRecord("пжст", "{Left}, пожалуйста,{Right}", false),
             new HotStringRuleRecord("ээ", "«»{Left}", false),
@@ -58,6 +58,7 @@ internal class HotStringRuleFactory : BaseRuleFactory
                     var names = s.Split(' ');
                     rules.Add(new HotStringRuleRecord("фио" + s[..i], s, false));
                     rules.Add(new HotStringRuleRecord("ф" + s[..i], $"{names[0]} {names[1].FirstOrDefault()}.{names[2].FirstOrDefault()}.", false));
+                    rules.Add(new HotStringRuleRecord("дд" + s[..i], $"Добрый день, {names[1]} {names[2]}!", false));
                     break;
                 }
             }

@@ -1,4 +1,5 @@
-﻿using AutoKeyNet.WindowsHooks.Rule;
+﻿using System.Diagnostics;
+using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNetApp.Helpers;
 
 namespace AutoKeyNetApp.RuleFactory;
@@ -25,6 +26,7 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
 
     private static string PasteWithoutFormat()
     {
-        return ClipboardHelper.GetPlainTextFromClipboard() ?? string.Empty;
+        Debug.WriteLine("PasteWithoutFormat");
+        return Clipboard.GetText(TextDataFormat.UnicodeText); //ClipboardHelper.GetPlainTextFromClipboard() ?? string.Empty;
     }
 }

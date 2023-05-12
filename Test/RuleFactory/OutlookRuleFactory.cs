@@ -1,4 +1,5 @@
-﻿using AutoKeyNet.WindowsHooks.Rule;
+﻿using System.Diagnostics;
+using AutoKeyNet.WindowsHooks.Rule;
 using MolluscOutlookLibrary;
 using MailItem = MolluscOutlookLibrary.MailItem;
 using Outlook = Microsoft.Office.Interop.Outlook;
@@ -82,6 +83,7 @@ internal class OutlookRuleFactory : BaseRuleFactory
             new VimKeyRuleRecord("G", "{END}", OutlookCheckNotEditor),
             new VimKeyRuleRecord("o", "{CONTROL DOWN}{KEY_O DOWN}{KEY_O UP}{CONTROL UP}", OutlookCheckNotEditor),
 
+            new HotStringRuleRecord("дд", GetGreeting, checkWindowCondition: OutlookCheckEditor )
         };
 
     }
@@ -143,9 +145,20 @@ internal class OutlookRuleFactory : BaseRuleFactory
     }
 
     private static readonly string[] ControlNames = new string[] { "_WwG", "RICHEDIT60W", "RichEdit20WPT" };
-    private static bool OutlookCheckNotEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
+    public static bool OutlookCheckNotEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
     {
         return windowClass == "rctrl_renwnd32" && controlClassName is not null && !ControlNames.Contains(controlClassName);
+    }
+
+    public static bool OutlookCheckEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
+    {
+        return windowClass == "rctrl_renwnd32" && controlClassName is not null && ControlNames.Contains(controlClassName);
+    }
+
+    public static bool NotInOutlookEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
+    {
+        return windowClass != "rctrl_renwnd32" || OutlookCheckNotEditor(windowTitle, windowClass, windowModuleName, controlClassName);
+
     }
 
     private static void SetImportanceOutlook(Outlook.OlImportance importance)
@@ -176,5 +189,17 @@ internal class OutlookRuleFactory : BaseRuleFactory
             if (OutlookApplication.GetSelectedItems().FirstOrDefault(i => i is MailItem) is MailItem item)
                 OutlookApplication.Search($"откого:({item.SenderName})");
         });
+    }
+    private static string GetGreeting()
+    {
+        return Task.Run(() =>
+        {
+            if (OutlookApplication.GetRecipientCurrentWindow() is { } item)
+            {
+                var name = item.Split(' ');
+                return $"Добрый день, {name[1]} {name[2]}!";
+            }
+            return "Добрый день!";
+        }).Result;
     }
 }
