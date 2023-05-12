@@ -11,6 +11,17 @@ namespace AutoKeyNet.WindowsHooks.Helper;
 /// </summary>
 internal static class VirtualKeyExtension
 {
+    private static Dictionary<(VirtualKey, KeyEventFlags), MouseEvents> mouseKeys = new()
+    {
+        {(VirtualKey.LBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.LEFTDOWN},
+        {(VirtualKey.LBUTTON, KeyEventFlags.KEYUP), MouseEvents.LEFTUP},
+        {(VirtualKey.RBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.RIGHTDOWN},
+        {(VirtualKey.RBUTTON, KeyEventFlags.KEYUP), MouseEvents.RIGHTUP},
+        {(VirtualKey.MBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.MIDDLEDOWN},
+        {(VirtualKey.MBUTTON, KeyEventFlags.KEYUP), MouseEvents.MIDDLEUP},
+        {(VirtualKey.MBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.XDOWN},
+        {(VirtualKey.MBUTTON, KeyEventFlags.KEYUP), MouseEvents.XUP},
+    };
 
     /// <summary>
     /// Method for converting a virtual key to an Input structure with a key down event
@@ -21,6 +32,7 @@ internal static class VirtualKeyExtension
     /// <returns>An Input structure that represents the virtual key</returns>
     internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo = Constants.KEY_IGNORE)
     {
+        
         return new Input
         {
             type = InputType.INPUT_KEYBOARD,
