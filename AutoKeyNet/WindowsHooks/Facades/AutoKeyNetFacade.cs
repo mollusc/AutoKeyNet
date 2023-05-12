@@ -4,20 +4,20 @@ using AutoKeyNet.WindowsHooks.Rule;
 namespace AutoKeyNet.WindowsHooks.Facades;
 
 /// <summary>
-/// Class for combining all key handlers
+///     Class for combining all key handlers
 /// </summary>
 public class AutoKeyNetFacade : IDisposable
 {
     private readonly HotKeyHandler _hotKeyHandler;
     private readonly HotStringHandler _hotStringHandler;
+    private readonly KeyboardHook _kbdHook;
+    private readonly MouseHook _mouseHook;
     private readonly VimKeyHandler _vimKeyHandler;
 
     private readonly WinHook _winHook;
-    private readonly MouseHook _mouseHook;
-    private readonly KeyboardHook _kbdHook;
 
     /// <summary>
-    /// Constructor for initializing all key handlers
+    ///     Constructor for initializing all key handlers
     /// </summary>
     /// <param name="rules">List of rules</param>
     public AutoKeyNetFacade(IEnumerable<BaseRuleRecord> rules)
@@ -33,7 +33,7 @@ public class AutoKeyNetFacade : IDisposable
     }
 
     /// <summary>
-    /// Method for disposing of objects
+    ///     Method for disposing of objects
     /// </summary>
     public void Dispose()
     {

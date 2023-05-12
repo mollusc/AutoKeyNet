@@ -15,10 +15,10 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
         return new List<BaseRuleRecord>()
         {
 
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_X DOWN}", () => RunProgram("iexplore", "C:\\Program Files\\Internet Explorer\\iexplore.exe"),null, HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_X DOWN}", () => RunProgram("iexplore", "C:\\Program Files\\Internet Explorer\\iexplore.exe"),null, HotKeyRuleRecordOptionFlags.SuppressNativeBehaviorForPrefixKey),
             new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_E DOWN}", () => RunProgram("EXCEL", "c:\\Program Files\\Microsoft Office\\Office15\\EXCEL.EXE")),
             new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_W DOWN}", () => RunProgram("WINWORD", "c:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE")),
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_T DOWN}", () => RunProgram("TOTALCMD64", "C:\\Program Files (x86)\\Total Commander\\TOTALCMD64.EXE"),null, HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_T DOWN}", () => RunProgram("TOTALCMD64", "C:\\Program Files (x86)\\Total Commander\\TOTALCMD64.EXE"),null, HotKeyRuleRecordOptionFlags.SuppressNativeBehaviorForPrefixKey),
             new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_S DOWN}", () => RunProgram("OUTLOOK", "C:\\Program Files\\Microsoft Office\\Office15\\OUTLOOK.EXE")),
         };
     }

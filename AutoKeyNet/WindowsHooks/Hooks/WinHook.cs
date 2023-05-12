@@ -1,21 +1,21 @@
-﻿using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
-using System.Runtime.InteropServices;
-using AutoKeyNet.WindowsHooks.Helper;
+﻿using AutoKeyNet.WindowsHooks.Helper;
+using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
+
 /// <summary>
-/// Class for Windows hooking
+///     Class for Windows hooking
 /// </summary>
 internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
 {
     /// <summary>
-    /// Делегат функции обратного вызова
+    ///     Delegate for the callback function
     /// </summary>
     private readonly WinEventDelegate _hookEvent;
 
     /// <summary>
-    /// Конструктор класса хука окон Widows
+    ///     Constructor of the class for Windows hooking
     /// </summary>
     public WinHook()
     {
@@ -24,14 +24,14 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     }
 
     /// <summary>
-    /// Событие возникающее при срабатывании хука
+    ///     Event that is triggered when a Windows event occurs.
     /// </summary>
     public event EventHandler<WinBaseHookEventArgs>? OnHookEvent;
 
     /// <summary>
-    /// Установить хук
+    ///     Set of the Windows hook
     /// </summary>
-    /// <returns>Возвращает идентификатор хука</returns>
+    /// <returns>Identifier for the hook</returns>
     protected override nint SetHook()
     {
         return SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nint.Zero,
@@ -39,29 +39,25 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     }
 
     /// <summary>
-    /// Функция обратного вызова возникающего при срабатывании хука.
+    ///     Callback function that is called when a Windows hook is executed.
     /// </summary>
-    /// <param name="hWinEventHook">Дескриптор функции обработчика событий.</param>
-    /// <param name="eventType">Указывает событие, которое произошло.</param>
-    /// <param name="hwnd">Дескриптор окна, создающего событие, или ЗНАЧЕНИЕ NULL , если с событием не связано ни окно.</param>
-    /// <param name="idObject">Определяет объект, связанный с событием.</param>
-    /// <param name="idChild">Определяет, было ли событие активировано объектом или дочерним элементом объекта.param>
-    /// <param name="dwEventThread"></param>
-    /// <param name="dwmsEventTime">Указывает время создания события в миллисекундах.</param>
-    public void WinEventProc(nint hWinEventHook, uint eventType, nint hwnd, int idObject, int idChild,
+    /// <param name="hWinEventHook">The handle to the WinEvent hook.</param>
+    /// <param name="eventType">The type of event that occurred</param>
+    /// <param name="handle">The handle to the window that triggered the event</param>
+    /// <param name="idObject">The ID of the object that triggered the event</param>
+    /// <param name="idChild">The ID of the child object that triggered the event</param>
+    /// <param name="dwEventThread">The ID of the thread that triggered the event</param>
+    /// <param name="dwmsEventTime">The time at which the event occurred</param>
+    public void WinEventProc(nint hWinEventHook, uint eventType, nint handle, int idObject, int idChild,
         uint dwEventThread, uint dwmsEventTime)
     {
-        WinBaseHookEventArgs winBaseHookEventArgs =
-            new WinBaseHookEventArgs(WindowHelper.GetActiveWindowTitle(), eventType, hwnd);
+        var winBaseHookEventArgs =
+            new WinBaseHookEventArgs(WindowHelper.GetActiveWindowTitle(), eventType, handle);
         OnHookEvent?.Invoke(hWinEventHook, winBaseHookEventArgs);
     }
 
     /// <summary>
-    /// Remove of the windows hook
+    ///     Remove of the Windows hook
     /// </summary>
     protected override void Unhook() => UnhookWinEvent(HookId);
-
-    #region Windows API functions
-
-    #endregion
 }

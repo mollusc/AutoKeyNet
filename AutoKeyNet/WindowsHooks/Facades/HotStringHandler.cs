@@ -1,5 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.Rule;
@@ -7,45 +6,60 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
+
 /// <summary>
-/// Class for handling HotStrings
+///     Class for handling HotStrings
 /// </summary>
 internal class HotStringHandler : BaseKeyHandler, IDisposable
 {
     /// <summary>
-    /// Array of virtual keys that trigger the clearing of the buffer
+    ///     Array of virtual keys that trigger the clearing of the buffer
     /// </summary>
-    private readonly ushort[] _clearBufferKey = {
-            (ushort)VirtualKey.RIGHT,
-            (ushort)VirtualKey.LEFT,
-            (ushort)VirtualKey.UP,
-            (ushort)VirtualKey.DOWN,
-            (ushort)VirtualKey.END,
-            (ushort)VirtualKey.HOME
-        };
+    private readonly HashSet<ushort> _clearBufferKey = new()
+    {
+        (ushort)VirtualKey.RIGHT,
+        (ushort)VirtualKey.LEFT,
+        (ushort)VirtualKey.UP,
+        (ushort)VirtualKey.DOWN,
+        (ushort)VirtualKey.END,
+        (ushort)VirtualKey.HOME
+    };
 
     /// <summary>
-    /// Array of letters that represent the end of a word
+    ///     Array of letters that represent the end of a word
     /// </summary>
-    private readonly char[] _endWordCharacters = { ' ', '-', '(', ')', '[', ']', '{', '}', ':', ';', '"', '/', '\\', ',', '.', '?', '!', '\t', '\n', '\r' };
+    private readonly HashSet<char> _endWordCharacters = new()
+        { ' ', '-', '(', ')', '[', ']', '{', '}', ':', ';', '"', '/', '\\', ',', '.', '?', '!', '\t', '\n', '\r' };
 
     /// <summary>
-    /// Buffer for pressed keys
+    ///     Keyboard hook
     /// </summary>
-    private string _buffer;
-
-    private readonly WinHook _winHook;
-    private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _keyboardHook;
 
     /// <summary>
-    /// Constructor of the class for handling HotStrings
+    ///     Mouse hook
+    /// </summary>
+    private readonly MouseHook _mouseHook;
+
+    /// <summary>
+    ///     Windows hook
+    /// </summary>
+    private readonly WinHook _winHook;
+
+    /// <summary>
+    ///     Buffer for pressed keys
+    /// </summary>
+    private string _buffer;
+
+    /// <summary>
+    ///     Constructor of the class for handling HotStrings
     /// </summary>
     /// <param name="rules">List of rules</param>
     /// <param name="kbdHook">Keyboard hook</param>
     /// <param name="mouseHook">Mouse hook</param>
     /// <param name="winHook">Windows hook</param>
-    public HotStringHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
+    public HotStringHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook,
+        WinHook winHook) : base(rules)
     {
         _buffer = string.Empty;
 
@@ -58,7 +72,17 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
     }
 
     /// <summary>
-    /// Method for handling mouse events
+    ///     Method for disposing of hooks
+    /// </summary>
+    public void Dispose()
+    {
+        _winHook.OnHookEvent -= OnWinHookEvent;
+        _mouseHook.OnHookEvent -= OnMouseHookEvent;
+        _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
+    }
+
+    /// <summary>
+    ///     Method for handling mouse events
     /// </summary>
     /// <param name="sender">Sender of the event</param>
     /// <param name="e">Event arguments</param>
@@ -72,7 +96,7 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
     }
 
     /// <summary>
-    /// Method for handling the event when the foreground window changes
+    ///     Method for handling the event when the foreground window changes
     /// </summary>
     /// <param name="sender">Sender of the event</param>
     /// <param name="e">Event arguments</param>
@@ -82,7 +106,7 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
     }
 
     /// <summary>
-    /// Method for handling keyboard events
+    ///     Method for handling keyboard events
     /// </summary>
     /// <param name="sender">Sender of the event</param>
     /// <param name="e">Event arguments</param>
@@ -90,28 +114,24 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
     {
         if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
         {
-            KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
-                                                    throw new InvalidOperationException());
+            var kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
+                                             throw new InvalidOperationException());
             // Clear the buffer
-            if (_clearBufferKey.Contains((ushort)kbd.vkCode))
+            if (_clearBufferKey.Contains((ushort)kbd.VirtualKey))
             {
                 _buffer = string.Empty;
                 return;
             }
 
             // Remove the last character when the Backspace key is pressed
-            if (kbd.vkCode == VirtualKey.BACK)
+            if (kbd.VirtualKey == VirtualKey.BACK)
             {
                 if (_buffer.Length > 0)
                     _buffer = _buffer.Remove(_buffer.Length - 1);
                 return;
             }
 
-            if (char.IsLetterOrDigit(e.Letter))
-            {
-                _buffer += e.Letter;
-                //Debug.WriteLine($"HotString {e.Letter} --> {_buffer}");
-            }
+            if (char.IsLetterOrDigit(e.Letter)) _buffer += e.Letter;
         }
 
         if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
@@ -131,21 +151,32 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
 
 
     /// <summary>
-    /// Method for checking rules
+    ///     Method for checking rules
     /// </summary>
     /// <param name="isEndOfWord">True if the buffer contains a complete word; otherwise, false.</param>
-    /// <param name="windowTitle">Title of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
-    /// <param name="windowClass">Class of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
-    /// <param name="windowModule">Module name (file *.exe) of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
-    /// <param name="windowControl">Name of the focused control for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowTitle">
+    ///     Title of the foreground window for filtering rules. If the variable is null, the filter is
+    ///     not applied.
+    /// </param>
+    /// <param name="windowClass">
+    ///     Class of the foreground window for filtering rules. If the variable is null, the filter is
+    ///     not applied.
+    /// </param>
+    /// <param name="windowModule">
+    ///     Module name (file *.exe) of the foreground window for filtering rules. If the variable is
+    ///     null, the filter is not applied.
+    /// </param>
+    /// <param name="windowControl">
+    ///     Name of the focused control for filtering rules. If the variable is null, the filter is not
+    ///     applied.
+    /// </param>
     /// <returns>True if a rule was triggered; otherwise, false.</returns>
     private bool CheckRules(bool isEndOfWord, string? windowTitle, string? windowClass,
         string? windowModule, string? windowControl)
     {
-        foreach (BaseRuleRecord rule in Rules)
-        {
+        foreach (var rule in Rules)
             if (rule is HotStringRuleRecord hsRule
-                && _buffer.Equals(hsRule.KeyWord)
+                && _buffer.Equals(hsRule.KeyText)
                 && isEndOfWord == hsRule.TriggerByEndingCharacter
                 && (hsRule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                     true))
@@ -153,17 +184,7 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
                 hsRule.Run.Invoke();
                 return true;
             }
-        }
-        return false;
-    }
 
-    /// <summary>
-    /// Method for disposing of hooks
-    /// </summary>
-    public void Dispose()
-    {
-        _winHook.OnHookEvent -= OnWinHookEvent;
-        _mouseHook.OnHookEvent -= OnMouseHookEvent;
-        _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
+        return false;
     }
 }

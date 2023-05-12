@@ -6,12 +6,12 @@ using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 namespace AutoKeyNet.WindowsHooks.Helper;
 
 /// <summary>
-/// Extension methods for virtual keys
+///     Extension methods for virtual keys
 /// </summary>
 internal static class VirtualKeyExtension
 {
     /// <summary>
-    /// Method for converting a virtual key to an Input structure with a key down event
+    ///     Method for converting a virtual key to an Input structure with a key down event
     /// </summary>
     /// <param name="virtualKey">The virtual key that will be converted into an Input structure</param>
     /// <param name="flags">Specifies various aspects of a keystroke</param>
@@ -20,53 +20,45 @@ internal static class VirtualKeyExtension
     internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
         nuint extraInfo = KEY_IGNORE) => virtualKey switch
     {
-        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.LEFTUP),
-        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.LEFTDOWN),
-        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.RIGHTUP),
-        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.RIGHTDOWN),
-        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.MIDDLEUP),
-        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.MIDDLEDOWN),
-        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.XUP, XBUTTON1),
-        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, XBUTTON1),
-        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.XUP, XBUTTON2),
-        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, XBUTTON2),
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.LEFTDOWN.ToInput(),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.RIGHTUP.ToInput(),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.RIGHTDOWN.ToInput(),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.MIDDLEUP.ToInput(),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.MIDDLEDOWN.ToInput(),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON1),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON1),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON2),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON2),
 
         _ => GetKeyboardInput(virtualKey, flags, extraInfo)
     };
 
-    private static Input GetMouseInput(MouseEvents mouseEvents, uint mouseData = 0, nuint extraInfo = KEY_IGNORE) =>
-        new Input()
+    /// <summary>
+    ///     Converts a virtual key to a keyboard input
+    /// </summary>
+    /// <param name="virtualKey">The virtual key that will be converted into an Input structure</param>
+    /// <param name="flags">Specifies various aspects of a keystroke</param>
+    /// <param name="extraInfo">An additional value associated with the keystroke</param>
+    /// <returns>A keyboard Input structure that represents the virtual key</returns>
+    private static Input GetKeyboardInput(VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo) =>
+        new()
         {
-            type = InputType.INPUT_MOUSE,
-            U = new InputUnion()
+            Type = InputType.INPUT_KEYBOARD,
+            Data = new InputUnion
             {
-                mi = new MouseInput()
+                KeyboardInput = new KeyboardInput
                 {
-                    dwFlags = mouseEvents,
-                    mouseData = (int)mouseData,
-                    dwExtraInfo = extraInfo,
+                    VirtualKey = (ushort)virtualKey,
+                    ScanCode = (ushort)MapVirtualKey((uint)virtualKey, MAPVK_VK_TO_VSC),
+                    Flags = flags,
+                    ExtraInfo = extraInfo
                 }
             }
         };
 
-    private static Input GetKeyboardInput(VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo) =>
-        new Input
-        {
-            type = InputType.INPUT_KEYBOARD,
-            U = new InputUnion
-            {
-                ki = new KeyboardInput
-                {
-                    wVk = (ushort)virtualKey,
-                    wScan = (ushort)MapVirtualKey((uint)virtualKey, MAPVK_VK_TO_VSC),
-                    dwFlags = flags,
-                    dwExtraInfo = extraInfo,
-                },
-            }
-        };
-
     /// <summary>
-    /// Method for converting a virtual key to an Input structure with a key down and key up events
+    ///     Method for converting a virtual key to an Input structure with a key down and key up events
     /// </summary>
     /// <param name="virtualKey">Virtual key to be converted to an Input structure</param>
     /// <param name="flags">Specifies various aspects of a keystroke</param>
@@ -75,39 +67,41 @@ internal static class VirtualKeyExtension
     internal static IEnumerable<Input> ToInputsPressKey(this VirtualKey virtualKey, KeyEventFlags flags = 0,
         nuint extraInfo = KEY_IGNORE)
     {
-        foreach (KeyEventFlags extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
+        foreach (var extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
             yield return virtualKey.ToInput(flags | extraFlag, extraInfo);
     }
 
     /// <summary>
-    /// Преобразование виртуальной клавиши в конкретный символ Юникода с учетом регистра
-    /// (клавиши Shift)
+    ///     Converts a virtual key code to the corresponding Unicode character,
+    ///     taking into account the current keyboard layout. If the virtual key code does
+    ///     not have a corresponding character in the current layout, the method returns the null character ('\0').
     /// </summary>
     /// <param name="vkCode">Virtual key code</param>
-    /// <param name="isInvariantCulture">If parameter is set to false, the method will not take into
-    /// account the current language keyboard layout</param>
+    /// <param name="isInvariantCulture">
+    ///     If parameter is set to false, the method will not take into
+    ///     account the current language keyboard layout
+    /// </param>
     /// <returns>Unicode character</returns>
     internal static char ToUnicode(this VirtualKey vkCode, bool isInvariantCulture = false)
     {
-        StringBuilder sbString = new StringBuilder();
+        var sbString = new StringBuilder();
 
-        byte[] bKeyState = new byte[256];
+        var bKeyState = new byte[256];
         GetKeyState(VirtualKey.SHIFT);
         GetKeyState(VirtualKey.MENU);
-        bool bKeyStateStatus = GetKeyboardState(bKeyState);
+        var bKeyStateStatus = GetKeyboardState(bKeyState);
         if (!bKeyStateStatus)
             return '\0';
-        nint hkl = nint.Zero;
+        var hkl = nint.Zero;
         var lScanCode = MapVirtualKey((uint)vkCode, MAPVK_VK_TO_VSC);
         if (!isInvariantCulture)
         {
             var focusedHWnd = GetForegroundWindow();
-            var activeThread = GetWindowThreadProcessId(focusedHWnd, out uint processId);
+            var activeThread = GetWindowThreadProcessId(focusedHWnd, out var processId);
             hkl = GetKeyboardLayout(activeThread);
-            //Debug.WriteLine($"ForegroundWindow={focusedHWnd}, ActiveThread={activeThread}, ProcessId={processId}, KeyboardLayout={hkl}");
         }
 
-        ToUnicodeEx(vkCode, lScanCode, bKeyState, sbString, (int)5, (uint)0, hkl);
+        ToUnicodeEx(vkCode, lScanCode, bKeyState, sbString, 5, 0, hkl);
         return sbString.Length > 0 ? sbString[0] : '\0';
     }
 }

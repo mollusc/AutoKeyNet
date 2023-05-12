@@ -1,5 +1,3 @@
-using System.Diagnostics;
-using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
@@ -8,116 +6,52 @@ using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 namespace AutoKeyNet.WindowsHooks.Rule;
 
 /// <summary>
-/// Базовый класс по проверке срабатывания правил
+///     Base class for rules
 /// </summary>
 public class BaseRuleRecord
 {
     /// <summary>
-    /// Ключевое слово по которому срабатывает правило
+    ///     Delegate that checks the rule of the current window or control.
     /// </summary>
-    public string KeyWord { get; }
+    /// <param name="windowTitle">Title of the foreground window</param>
+    /// <param name="windowClass">Class of the foreground window</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window</param>
+    /// <param name="windowControl">Name of the focused control</param>
+    /// <returns>Result of check</returns>
+    public delegate bool WindowCondition(string? windowTitle, string? windowClass, string? windowModule,
+        string? windowControl);
 
     /// <summary>
-    /// Клавиши нажатые одновременно
-    /// </summary>
-    internal Input[] InputKeys { get; }
-
-
-    /// <summary>
-    /// Действие правила 
-    /// </summary>
-    public Action Run { get; }
-
-    /// <summary>
-    /// Делегат проверяющий условия относящимся к текущему окну
-    /// </summary>
-    /// <param name="windowTitle">Заголовок текущего окна</param>
-    /// <param name="windowClass">Класс текущего окна</param>
-    /// <param name="windowModule">Название исполняющего файла относящегося к текущему окну</param>
-    /// <param name="windowControl">Название элемента интерфейса текущего окна</param>
-    /// <returns></returns>
-    public delegate bool WindowCondition(string? windowTitle, string? windowClass, string? windowModule, string? windowControl);
-
-    /// <summary>
-    /// Проверка условия относящемся к текущему окну
+    ///     Check the rule of the current window or control.
     /// </summary>
     public WindowCondition? CheckWindowCondition;
 
     /// <summary>
-    /// Конструктор базового класса по проверке срабатывания правил
+    ///     Constructor of rule
     /// </summary>
-    /// <param name="keyWord">Строка определяющая условия срабатывания правила</param>
-    /// <param name="run">Действия выполняемое при соблюдении условий</param>
-    /// <param name="checkWindowCondition">Проверка условия относящаяся к текущему окну</param>
-    protected BaseRuleRecord(string keyWord, Action run, WindowCondition? checkWindowCondition)
+    /// <param name="keyText">Text of the rule that triggers the rule's action (Run).</param>
+    /// <param name="run">Action that is triggered when the rule is fired.</param>
+    /// <param name="checkWindowCondition">Check the rule of the current window or control.</param>
+    protected BaseRuleRecord(string keyText, Action run, WindowCondition? checkWindowCondition)
     {
-        KeyWord = keyWord;
-        InputKeys = keyWord.ToInputs().ToArray();
-        //if (releaseKeysBeforeRun)
-        //{
-        //    Run = () =>
-        //    {
-        //        List<Input> listInputs = new List<Input>(ReleaseKeys(keyWord));
-        //        Input[] inputs = listInputs.ToArray();
-        //        SendInput(inputs);
-        //        run.Invoke();
-        //    };
-        //}
-        //else
-            Run = run;
+        KeyText = keyText;
+        KeyInputs = keyText.ToInputs().ToArray();
+        Run = run;
         CheckWindowCondition = checkWindowCondition;
     }
 
-    protected static Action SendText(string replaceWord)
-    {
-        var inputs = replaceWord.ToInputs().ToArray();
-        return () =>
-        {
-            SendInput(inputs);
-        };
-    }
-    protected static Action SendText(Func<string> replaceFunc)
-    {
-        return () =>
-        {
-            var inputs = replaceFunc.Invoke().ToInputs().ToArray();
-            SendInput(inputs);
-        };
-    }
+    /// <summary>
+    ///     Text of the rule that triggers the rule's action (Run).
+    /// </summary>
+    public string KeyText { get; }
 
-    protected static Action SendText(Func<string> replaceFunc, string releaseKeys)
-    {
-        return () =>
-        {
-            List<Input> listInputs = new List<Input>(ReleaseKeys(releaseKeys));
-            listInputs.AddRange(replaceFunc.Invoke().ToInputs().ToArray());
-            Input[] inputs = listInputs.ToArray();
-            SendInput(inputs);
-        };
-    }
+    /// <summary>
+    ///     Array of Inputs struct for the rule that triggers the rule's action (Run).
+    /// </summary>
+    internal Input[] KeyInputs { get; }
 
-    protected static Action SendText(string replaceWord, string releaseKeys)
-    {
-        List<Input> listInputs = new List<Input>(ReleaseKeys(releaseKeys));
-        listInputs.AddRange(replaceWord.ToInputs());
-        Input[] inputs = listInputs.ToArray();
-        return () =>
-        {
-            SendInput(inputs);
-        };
-    }
-
-    internal static IEnumerable<Input> ReleaseKeys(string keys)
-    {
-        var inputs = keys.ToInputs().ToArray();
-        for (var i = 0; i < inputs.Length; i++)
-        {
-            if (inputs[i].type == InputType.INPUT_KEYBOARD)
-                inputs[i].U.ki.dwFlags = KeyEventFlags.KEYUP;
-            else if (inputs[i].type == InputType.INPUT_MOUSE)
-                inputs[i].U.mi.dwFlags = (MouseEvents)((int)inputs[i].U.mi.dwFlags << 1);
-        }
-
-        return inputs;
-    }
+    /// <summary>
+    ///     Action that is triggered when the rule is fired.
+    /// </summary>
+    public Action Run { get; }
 }

@@ -1,35 +1,35 @@
 ﻿namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
 /// <summary>
-/// Event arguments for a Windows hook
+///     Event arguments for a Windows hook
 /// </summary>
 internal class WinBaseHookEventArgs : BaseHookEventArgs
 {
     /// <summary>
-    /// Constructor for Windows hook event arguments.
+    ///     Constructor for Windows hook event arguments.
     /// </summary>
     /// <param name="windowTitle">Title of the foreground window</param>
     /// <param name="eventType">Event type</param>
-    /// <param name="hwnd">Identifier of a window</param>
-    public WinBaseHookEventArgs(string? windowTitle, uint eventType, nint hwnd)
+    /// <param name="handle">Identifier of a window</param>
+    public WinBaseHookEventArgs(string? windowTitle, uint eventType, nint handle)
     {
         WindowWindowTitle = windowTitle;
         EventType = eventType;
-        HWND = hwnd;
+        Handle = handle;
     }
 
     /// <summary>
-    /// Title of the foreground window
+    ///     Title of the foreground window
     /// </summary>
     public string? WindowWindowTitle { get; }
 
     /// <summary>
-    /// Event type
+    ///     Event type
     /// </summary>
     public uint EventType { get; }
 
     /// <summary>
-    /// Identifier of a window
+    ///     Identifier of a window
     /// </summary>
-    public nint HWND { get; }
+    public nint Handle { get; }
 }
