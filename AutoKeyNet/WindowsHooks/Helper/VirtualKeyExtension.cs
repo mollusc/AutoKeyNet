@@ -11,18 +11,6 @@ namespace AutoKeyNet.WindowsHooks.Helper;
 /// </summary>
 internal static class VirtualKeyExtension
 {
-    private static Dictionary<(VirtualKey, KeyEventFlags), MouseEvents> mouseKeys = new()
-    {
-        {(VirtualKey.LBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.LEFTDOWN},
-        {(VirtualKey.LBUTTON, KeyEventFlags.KEYUP), MouseEvents.LEFTUP},
-        {(VirtualKey.RBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.RIGHTDOWN},
-        {(VirtualKey.RBUTTON, KeyEventFlags.KEYUP), MouseEvents.RIGHTUP},
-        {(VirtualKey.MBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.MIDDLEDOWN},
-        {(VirtualKey.MBUTTON, KeyEventFlags.KEYUP), MouseEvents.MIDDLEUP},
-        {(VirtualKey.MBUTTON, KeyEventFlags.KEYDOWN), MouseEvents.XDOWN},
-        {(VirtualKey.MBUTTON, KeyEventFlags.KEYUP), MouseEvents.XUP},
-    };
-
     /// <summary>
     /// Method for converting a virtual key to an Input structure with a key down event
     /// </summary>
@@ -30,10 +18,40 @@ internal static class VirtualKeyExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>An Input structure that represents the virtual key</returns>
-    internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo = Constants.KEY_IGNORE)
+    internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
+        nuint extraInfo = Constants.KEY_IGNORE) => virtualKey switch
     {
-        
-        return new Input
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.LEFTDOWN),
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.LEFTUP),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.RIGHTDOWN),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.RIGHTUP),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.MIDDLEDOWN),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.MIDDLEUP),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, Constants.XBUTTON1),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.XUP, Constants.XBUTTON1),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, Constants.XBUTTON2),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.XUP, Constants.XBUTTON2),
+
+        _ => GetKeyboardInput(virtualKey, flags, extraInfo)
+    };
+
+    private static Input GetMouseInput(MouseEvents mouseEvents, int mouseData = 0) =>
+        new Input()
+        {
+            type = InputType.INPUT_MOUSE,
+            U = new InputUnion()
+            {
+                mi = new MouseInput()
+                {
+                    dwFlags = mouseEvents,
+                    mouseData = mouseData,
+                    dwExtraInfo = 0,
+                }
+            }
+        };
+
+    private static Input GetKeyboardInput(VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo) =>
+        new Input
         {
             type = InputType.INPUT_KEYBOARD,
             U = new InputUnion
@@ -47,7 +65,6 @@ internal static class VirtualKeyExtension
                 },
             }
         };
-    }
 
     /// <summary>
     /// Method for converting a virtual key to an Input structure with a key down and key up events

@@ -12,4 +12,6 @@ internal static class Constants
     public const uint MAPVK_VK_TO_CHAR = 0x02;
     public const uint MAPVK_VSC_TO_VK_EX = 0x03;
     public const uint MAPVK_VK_TO_VSC_EX = 0x04;
+    public const int XBUTTON1 = 0x0001;
+    public const int XBUTTON2 = 0x0002;
 }
