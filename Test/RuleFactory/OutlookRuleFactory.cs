@@ -20,6 +20,8 @@ internal class OutlookRuleFactory : BaseRuleFactory
             new HotKeyRuleRecord("2", () => SetImportanceOutlook(Outlook.OlImportance.olImportanceNormal), OutlookCheckNotEditor),
             new HotKeyRuleRecord("3", () => SetImportanceOutlook(Outlook.OlImportance.olImportanceHigh), OutlookCheckNotEditor),
 
+            new HotStringRuleRecord("дд", GetGreeting, checkWindowCondition: OutlookCheckEditor ),
+
             new VimKeyRuleRecord("c", SearchBySubject, OutlookCheckNotEditor),
             new VimKeyRuleRecord("a", SearchBySender, OutlookCheckNotEditor),
             new VimKeyRuleRecord("t", () =>
@@ -83,7 +85,6 @@ internal class OutlookRuleFactory : BaseRuleFactory
             new VimKeyRuleRecord("G", "{END}", OutlookCheckNotEditor),
             new VimKeyRuleRecord("o", "{CONTROL DOWN}{KEY_O DOWN}{KEY_O UP}{CONTROL UP}", OutlookCheckNotEditor),
 
-            new HotStringRuleRecord("дд", GetGreeting, checkWindowCondition: OutlookCheckEditor )
         };
 
     }
