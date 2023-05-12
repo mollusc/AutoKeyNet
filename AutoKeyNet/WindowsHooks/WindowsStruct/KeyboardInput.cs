@@ -10,5 +10,5 @@ internal struct KeyboardInput
     public ushort wScan;
     public KeyEventFlags dwFlags;
     public int time;
-    public UIntPtr dwExtraInfo;
+    public nuint dwExtraInfo;
 }

@@ -31,9 +31,9 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     /// Установить хук
     /// </summary>
     /// <returns>Возвращает идентификатор хука</returns>
-    protected override IntPtr SetHook()
+    protected override nint SetHook()
     {
-        return SetWinEventHook(Constants.EVENT_SYSTEM_FOREGROUND, Constants.EVENT_SYSTEM_FOREGROUND, IntPtr.Zero,
+        return SetWinEventHook(Constants.EVENT_SYSTEM_FOREGROUND, Constants.EVENT_SYSTEM_FOREGROUND, nint.Zero,
             _hookEvent, 0, 0, Constants.WINEVENT_OUTOFCONTEXT);
     }
 
@@ -47,7 +47,7 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     /// <param name="idChild">Определяет, было ли событие активировано объектом или дочерним элементом объекта.param>
     /// <param name="dwEventThread"></param>
     /// <param name="dwmsEventTime">Указывает время создания события в миллисекундах.</param>
-    public void WinEventProc(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild,
+    public void WinEventProc(nint hWinEventHook, uint eventType, nint hwnd, int idObject, int idChild,
         uint dwEventThread, uint dwmsEventTime)
     {
         WinBaseHookEventArgs winBaseHookEventArgs =
@@ -62,13 +62,13 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
 
     #region Windows API functions
     [DllImport("user32.dll")]
-    static extern IntPtr SetWinEventHook(uint eventMin, uint eventMax, IntPtr hmodWinEventProc,
+    static extern nint SetWinEventHook(uint eventMin, uint eventMax, nint hmodWinEventProc,
         WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
 
     [DllImport("user32.dll")]
-    static extern bool UnhookWinEvent(IntPtr hWinEventHook);
+    static extern bool UnhookWinEvent(nint hWinEventHook);
 
-    delegate void WinEventDelegate(IntPtr hWinEventHook, uint eventType, IntPtr hwnd, int idObject, int idChild,
+    delegate void WinEventDelegate(nint hWinEventHook, uint eventType, nint hwnd, int idObject, int idChild,
         uint dwEventThread, uint dwmsEventTime);
     #endregion
 }

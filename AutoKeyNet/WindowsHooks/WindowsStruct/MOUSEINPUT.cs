@@ -11,5 +11,5 @@ internal struct MouseInput
     internal int mouseData;
     internal MouseEvents dwFlags;
     internal uint time;
-    internal UIntPtr dwExtraInfo;
+    internal nuint dwExtraInfo;
 }

@@ -15,7 +15,7 @@ internal static class WindowHelper
     {
         const int nChars = 256;
         StringBuilder buff = new StringBuilder(nChars);
-        IntPtr handle = GetForegroundWindow();
+        nint handle = GetForegroundWindow();
 
         if (GetWindowText(handle, buff, nChars) > 0)
         {
@@ -29,7 +29,7 @@ internal static class WindowHelper
     {
         const int nChars = 256;
         StringBuilder buff = new StringBuilder(nChars);
-        IntPtr handle = GetForegroundWindow();
+        nint handle = GetForegroundWindow();
 
         if (GetClassName(handle, buff, nChars) > 0)
         {
@@ -43,8 +43,8 @@ internal static class WindowHelper
     {
         try
         {
-            IntPtr handle = GetForegroundWindow();
-            if (handle == IntPtr.Zero)
+            nint handle = GetForegroundWindow();
+            if (handle == nint.Zero)
                 return null;
             GetWindowThreadProcessId(handle, out var processId);
             Process p = Process.GetProcessById((int)processId);
@@ -64,12 +64,12 @@ internal static class WindowHelper
 
     internal static string? GetActiveWindowFocusControlName()
     {
-        IntPtr activeWindowHandle = GetForegroundWindow();
+        nint activeWindowHandle = GetForegroundWindow();
 
-        IntPtr activeWindowThread = GetWindowThreadProcessId(activeWindowHandle, IntPtr.Zero);
+        nint activeWindowThread = GetWindowThreadProcessId(activeWindowHandle, nint.Zero);
 
         GetInfo(activeWindowThread, out GUIThreadInfo info);
-        IntPtr focusedControlHandle = info.hwndFocus;
+        nint focusedControlHandle = info.hwndFocus;
 
         StringBuilder className = new StringBuilder(256);
         if (GetClassName(focusedControlHandle, className, className.Capacity) != 0)
@@ -78,7 +78,7 @@ internal static class WindowHelper
     }
 
 
-    public static bool GetInfo(IntPtr hwnd, out GUIThreadInfo lpgui)
+    private static bool GetInfo(nint hwnd, out GUIThreadInfo lpgui)
     {
         uint threadId = GetWindowThreadProcessId(hwnd, out _);
 
@@ -93,18 +93,18 @@ internal static class WindowHelper
     static extern bool GetGUIThreadInfo(uint idThread, ref GUIThreadInfo lpgui);
 
     [DllImport("user32.dll")]
-    static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, IntPtr ProcessId);
+    static extern nint GetWindowThreadProcessId(nint hWnd, nint ProcessId);
 
     [DllImport("user32.dll")]
-    static extern IntPtr GetForegroundWindow();
+    static extern nint GetForegroundWindow();
 
     [DllImport("user32.dll")]
-    static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+    static extern uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
 
     [DllImport("user32.dll")]
-    static extern int GetWindowText(IntPtr hWnd, StringBuilder text, int count);
+    static extern int GetWindowText(nint hWnd, StringBuilder text, int count);
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+    static extern int GetClassName(nint hWnd, StringBuilder lpClassName, int nMaxCount);
     #endregion
 }

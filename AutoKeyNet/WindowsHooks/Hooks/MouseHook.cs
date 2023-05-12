@@ -34,7 +34,7 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     /// Установить хук
     /// </summary>
     /// <returns>Возвращает идентификатор хука</returns>
-    protected override IntPtr SetHook()
+    protected override nint SetHook()
     {
         using Process curProcess = Process.GetCurrentProcess();
         using ProcessModule? curModule = curProcess.MainModule;
@@ -55,17 +55,16 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     /// <param name="lParam">Указатель на структуру</param>
     /// <returns>Код, который используется для определения способа обработки сообщения</returns>
     /// <exception cref="InvalidOperationException"></exception>
-    private IntPtr LowLevelMouseProc(int nCode, IntPtr wParam, IntPtr lParam)
+    private nint LowLevelMouseProc(int nCode, nint wParam, nint lParam)
     {
         if (nCode >= Constants.HC_ACTION)
         {
             MouseLowLevelHook hookStruct = (MouseLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(MouseLowLevelHook)) ??
                                                          throw new InvalidOperationException());
             MouseHookEventArgs mouseHookEventArgs = new MouseHookEventArgs(wParam, lParam,
-                hookStruct.mouseData >> 16,
-                WindowHelper.GetActiveWindowClass(), WindowHelper.GetActiveWindowTitle(),
-                WindowHelper.GetActiveWindowModuleFileName(),
-                WindowHelper.GetActiveWindowFocusControlName());
+                hookStruct.mouseData >> 16, WindowHelper.GetActiveWindowTitle(),
+                WindowHelper.GetActiveWindowClass(),
+                WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
             OnHookEvent?.Invoke(wParam, mouseHookEventArgs);
         }
 
@@ -80,12 +79,12 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     #region Windows API functions
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+    private static extern bool UnhookWindowsHookEx(nint hhk);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, IntPtr hMod,
+    private static extern nint SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, nint hMod,
         uint dwThreadId);
 
-    private delegate IntPtr HookCallbackDelegate(int nCode, IntPtr wParam, IntPtr lParam);
+    private delegate nint HookCallbackDelegate(int nCode, nint wParam, nint lParam);
     #endregion
 }

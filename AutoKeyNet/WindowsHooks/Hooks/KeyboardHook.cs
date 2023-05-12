@@ -9,7 +9,7 @@ namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
 /// Class for keyboard hooking
 /// </summary>
-internal class KeyboardHook : BaseHook, IHookEvent<KeyBaseHookEventArgs>
+internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
 {
     /// <summary>
     /// Delegate for the callback function
@@ -28,13 +28,13 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyBaseHookEventArgs>
     /// <summary>
     /// Event that occurs when a key is pressed or released.
     /// </summary>
-    public event EventHandler<KeyBaseHookEventArgs>? OnHookEvent;
+    public event EventHandler<KeyboardHookEventArgs>? OnHookEvent;
 
     /// <summary>
     /// Set of the keyboard hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected override IntPtr SetHook()
+    protected override nint SetHook()
     {
         using Process curProcess = Process.GetCurrentProcess();
         using ProcessModule? curModule = curProcess.MainModule;
@@ -48,28 +48,27 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyBaseHookEventArgs>
     }
     /// <summary>
     /// Функция обратного вызова возникающего при срабатывании хука.
-    /// Для прекращения передачи нажатия клавиши в систему необходимо установить свойство KeyBaseHookEventArgs.Cancel в true
+    /// Для прекращения передачи нажатия клавиши в систему необходимо установить свойство KeyboardHookEventArgs.Cancel в true
     /// </summary>
     /// <param name="nCode">Код, который используется для определения способа обработки сообщения</param>
     /// <param name="wParam">Идентификатор сообщения клавиатуры</param>
     /// <param name="lParam">Указатель на структуру</param>
     /// <returns>Код, который используется для определения способа обработки сообщения</returns>
     /// <exception cref="InvalidOperationException"></exception>
-    private IntPtr LowLevelKeyboardProc(int nCode, IntPtr wParam, IntPtr lParam)
+    private nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam)
     {
         if (nCode >= Constants.HC_ACTION)
         {
             KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(KeyboardLowLevelHook)) ??
                                                     throw new InvalidOperationException());
-            if (kbd.dwExtraInfo != (UIntPtr)Constants.KEY_IGNORE)
+            if (kbd.dwExtraInfo != (nuint)Constants.KEY_IGNORE)
             {
-                KeyBaseHookEventArgs keyBaseHookEventArgs = new KeyBaseHookEventArgs((Keys)kbd.vkCode,
-                    kbd.vkCode.ToUnicode(), kbd.vkCode.ToUnicode(true), wParam, lParam,
-                    WindowHelper.GetActiveWindowClass(), WindowHelper.GetActiveWindowTitle(),
-                    WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
+                KeyboardHookEventArgs keyboardHookEventArgs = new KeyboardHookEventArgs((Keys)kbd.vkCode,
+                    kbd.vkCode.ToUnicode(), kbd.vkCode.ToUnicode(true), wParam, lParam, WindowHelper.GetActiveWindowTitle(),
+                    WindowHelper.GetActiveWindowClass(), WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
 
-                OnHookEvent?.Invoke(kbd.vkCode, keyBaseHookEventArgs);
-                if (keyBaseHookEventArgs.Cancel)
+                OnHookEvent?.Invoke(kbd.vkCode, keyboardHookEventArgs);
+                if (keyboardHookEventArgs.Cancel)
                     return 1;
             }
         }
@@ -84,13 +83,13 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyBaseHookEventArgs>
 
     #region Windows API functions
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern IntPtr SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, IntPtr hMod,
+    private static extern nint SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, nint hMod,
         uint dwThreadId);
 
     [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
     [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UnhookWindowsHookEx(IntPtr hhk);
+    private static extern bool UnhookWindowsHookEx(nint hhk);
 
-    private delegate IntPtr HookCallbackDelegate(int nCode, IntPtr wParam, IntPtr lParam);
+    private delegate nint HookCallbackDelegate(int nCode, nint wParam, nint lParam);
     #endregion
 }

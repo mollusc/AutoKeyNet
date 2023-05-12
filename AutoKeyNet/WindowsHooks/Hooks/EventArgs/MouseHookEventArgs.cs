@@ -1,55 +1,64 @@
 ﻿namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+
 /// <summary>
-/// Параметры события мыши
+/// Event arguments for a mouse hook
 /// </summary>
 internal class MouseHookEventArgs : BaseHookEventArgs
 {
     /// <summary>
-    /// Конструктор параметра события мыши
+    /// Constructor for mouse hook event arguments.
     /// </summary>
-    /// <param name="wParam">Дополнительный параметр клавиши</param>
-    /// <param name="lParam">Дополнительный параметр клавиши</param>
-    /// <param name="mouseData">Дополнительный параметр используемый в случае нажатия клавиш XButton1, XButton2 или использования колеса прокрутки</param>
-    /// <param name="windowClass">Класс текущего окна</param>
-    /// <param name="windowTitle">Заголовок текущего окна</param>
-    /// <param name="windowModule">Название файла exe текущей программы</param>
-    /// <param name="windowControl">Название выбранного элемента интерфейса</param>
-    public MouseHookEventArgs(IntPtr wParam, IntPtr lParam, int mouseData, string? windowClass, string? windowTitle, string? windowModule, string? windowControl)
+    /// <param name="wParam">The identifier of the mouse message</param>
+    /// <param name="lParam">A pointer to an Windows API MSLLHOOKSTRUCT structure</param>
+    /// <param name="mouseData">Additional parameter for a mouse message used to detect the XBUTTON1 or XBUTTON2 keys.</param>
+    /// <param name="windowTitle">Title of the foreground window</param>
+    /// <param name="windowClass">Class of the foreground window</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window</param>
+    /// <param name="windowControl">Name of the focused control</param>
+    public MouseHookEventArgs(nint wParam, nint lParam, int mouseData, string? windowTitle, string? windowClass,
+        string? windowModule, string? windowControl)
     {
         WParam = wParam;
         LParam = lParam;
         MouseData = mouseData;
-        WindowClass = windowClass;
         WindowTitle = windowTitle;
+        WindowClass = windowClass;
         WindowModule = windowModule;
         WindowControl = windowControl;
     }
+
     /// <summary>
-    /// Дополнительный параметр клавиши
+    /// The identifier of the mouse message
     /// </summary>
-    public IntPtr WParam { get; }
+    public nint WParam { get; }
+
     /// <summary>
-    /// Дополнительный параметр клавиши
+    /// A pointer to an Windows API MSLLHOOKSTRUCT structure
     /// </summary>
-    public IntPtr LParam { get; }
+    public nint LParam { get; }
+
     /// <summary>
-    /// Дополнительный параметр. В случаях с кнопками XButton1, XButton2 или использования колеса прокрутки
+    /// Additional parameter for a mouse message used to detect the XBUTTON1 or XBUTTON2 keys.
     /// </summary>
     public int MouseData { get; }
+
     /// <summary>
-    /// Класс текущего окна
+    /// Class of the foreground window
     /// </summary>
     public string? WindowClass { get; }
+
     /// <summary>
-    /// Заголовок текущего окна
+    /// Title of the foreground window
     /// </summary>
     public string? WindowTitle { get; }
+
     /// <summary>
-    /// Название файла exe текущей программы
+    /// Module name (file *.exe) of the foreground window
     /// </summary>
     public string? WindowModule { get; }
+
     /// <summary>
-    /// Название выбранного элемента интерфейса
+    /// Name of the focused control
     /// </summary>
     public string? WindowControl { get; }
 }

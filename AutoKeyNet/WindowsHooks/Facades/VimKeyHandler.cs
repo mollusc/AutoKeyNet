@@ -97,9 +97,9 @@ internal class VimKeyHandler : BaseKeyHandler, IDisposable
     /// </summary>
     /// <param name="sender">Sender of the event</param>
     /// <param name="e">Event arguments</param>
-    private void OnKeyboardHookEvent(object? sender, KeyBaseHookEventArgs e)
+    private void OnKeyboardHookEvent(object? sender, KeyboardHookEventArgs e)
     {
-        if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
+        if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
         {
             KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
                                                     throw new InvalidOperationException());
@@ -144,7 +144,7 @@ internal class VimKeyHandler : BaseKeyHandler, IDisposable
             }
         }
 
-        if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYUP)
+        if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
         {
             if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
                 _buffer = string.Empty;

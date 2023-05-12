@@ -10,5 +10,5 @@ internal struct KeyboardLowLevelHook
     public uint scanCode;
     public KeyboardLowLevelHookFlags flags;
     public uint time;
-    public UIntPtr dwExtraInfo;
+    public nuint dwExtraInfo;
 }

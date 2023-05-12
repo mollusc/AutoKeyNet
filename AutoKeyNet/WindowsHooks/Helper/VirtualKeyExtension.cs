@@ -55,9 +55,10 @@ internal static class VirtualKeyExtension
     /// Преобразование виртуальной клавиши в конкретный символ Юникода с учетом регистра
     /// (клавиши Shift)
     /// </summary>
-    /// <param name="vkCode">Виртуальный код клавиши</param>
-    /// <param name="isInvariantCulture"></param>
-    /// <returns>Символ в формате Юникод</returns>
+    /// <param name="vkCode">Virtual key code</param>
+    /// <param name="isInvariantCulture">If parameter is set to false, the method will not take into
+    /// account the current language keyboard layout</param>
+    /// <returns>Unicode character</returns>
     internal static char ToUnicode(this VirtualKey vkCode, bool isInvariantCulture = false)
     {
         StringBuilder sbString = new StringBuilder();
@@ -68,7 +69,7 @@ internal static class VirtualKeyExtension
         bool bKeyStateStatus = GetKeyboardState(bKeyState);
         if (!bKeyStateStatus)
             return '\0';
-        IntPtr hkl = IntPtr.Zero;
+        nint hkl = nint.Zero;
         var lScanCode = MapVirtualKey((uint)vkCode, Constants.MAPVK_VK_TO_VSC);
         if (!isInvariantCulture)
         {
@@ -92,14 +93,15 @@ internal static class VirtualKeyExtension
 
     [DllImport("user32.dll")]
     private static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte[] lpKeyState,
-        [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
+        [Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder pwszBuff, int cchBuff, uint wFlags, nint dwhkl);
 
     [DllImport("user32.dll")]
-    private static extern IntPtr GetKeyboardLayout(uint idThread);
+    private static extern nint GetKeyboardLayout(uint idThread);
 
     [DllImport("user32.dll", ExactSpelling = true)]
-    internal static extern uint GetWindowThreadProcessId(IntPtr hwindow, out uint processId);
+    internal static extern uint GetWindowThreadProcessId(nint hwindow, out uint processId);
 
     [DllImport("user32.dll")]
-    private static extern IntPtr GetForegroundWindow();
+    private static extern nint GetForegroundWindow();
+    #endregion
 }

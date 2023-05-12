@@ -78,11 +78,11 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// </summary>
     /// <param name="sender">Sender of the event</param>
     /// <param name="e">Event arguments</param>
-    private void OnKeyboardHookEvent(object? sender, KeyBaseHookEventArgs e)
+    private void OnKeyboardHookEvent(object? sender, KeyboardHookEventArgs e)
     {
         KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
                                                 throw new InvalidOperationException());
-        if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
+        if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
         {
             _buffer.Add((ushort)kbd.vkCode);
             //Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
@@ -90,7 +90,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
                 e.Cancel = true;
         }
 
-        if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYUP)
+        if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
         {
             _buffer.Remove((ushort)kbd.vkCode);
         }

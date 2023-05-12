@@ -8,5 +8,5 @@ internal struct MouseLowLevelHook
     public int mouseData;
     public int flags;
     public int time;
-    public UIntPtr dwExtraInfo;
+    public nuint dwExtraInfo;
 }

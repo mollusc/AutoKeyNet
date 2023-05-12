@@ -1,13 +1,13 @@
 ﻿namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
 /// <summary>
-/// Интерфейс подразумевающий вызов события с параметром типа BaseHookEventArgs
+/// Interface for calling events with BaseHookEventArgs.
 /// </summary>
-/// <typeparam name="TBaseEventArgs">Тип параметра события</typeparam>
+/// <typeparam name="TBaseEventArgs">Type for event arguments</typeparam>
 internal interface IHookEvent<TBaseEventArgs> where TBaseEventArgs : BaseHookEventArgs
 {
     /// <summary>
-    /// Событие возникающее при срабатывании хука
+    /// Event triggered by a Windows hook.
     /// </summary>
     public event EventHandler<TBaseEventArgs>? OnHookEvent;
 }

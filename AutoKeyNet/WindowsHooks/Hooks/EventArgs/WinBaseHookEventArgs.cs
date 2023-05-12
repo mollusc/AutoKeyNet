@@ -1,16 +1,17 @@
 ﻿namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+
 /// <summary>
-/// Параметр события окна Windows
+/// Event arguments for a Windows hook
 /// </summary>
 internal class WinBaseHookEventArgs : BaseHookEventArgs
 {
     /// <summary>
-    /// Конструктор параметра события окна Windows
+    /// Constructor for Windows hook event arguments.
     /// </summary>
-    /// <param name="windowTitle">Заголовок текущего окна</param>
-    /// <param name="eventType">Тип события окна</param>
-    /// <param name="hwnd">Идентификатор окна</param>
-    public WinBaseHookEventArgs(string? windowTitle, uint eventType, IntPtr hwnd)
+    /// <param name="windowTitle">Title of the foreground window</param>
+    /// <param name="eventType">Event type</param>
+    /// <param name="hwnd">Identifier of a window</param>
+    public WinBaseHookEventArgs(string? windowTitle, uint eventType, nint hwnd)
     {
         WindowWindowTitle = windowTitle;
         EventType = eventType;
@@ -18,15 +19,17 @@ internal class WinBaseHookEventArgs : BaseHookEventArgs
     }
 
     /// <summary>
-    /// Заголовок текущего окна
+    /// Title of the foreground window
     /// </summary>
     public string? WindowWindowTitle { get; }
+
     /// <summary>
-    /// Тип события окна
+    /// Event type
     /// </summary>
     public uint EventType { get; }
+
     /// <summary>
-    /// Идентификатор окна
+    /// Identifier of a window
     /// </summary>
-    public IntPtr HWND { get; }
+    public nint HWND { get; }
 }
