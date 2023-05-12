@@ -1,4 +1,5 @@
-﻿using AutoKeyNet.WindowsHooks.WindowsEnums;
+﻿using System.Diagnostics;
+using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Rule;
@@ -82,6 +83,7 @@ internal class HotKeyFacade : BaseKeyFacade, IDisposable
             if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
             {
                 _buffer.Add((ushort)kbd.vkCode);
+                Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
                 if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
                     e.Cancel = true;
             }

@@ -26,8 +26,8 @@ internal class HotStringRuleFactory : BaseRuleFactory
             new HotStringRuleRecord("ыа", "откого:(){Left}", false),
             new HotStringRuleRecord("ые", "имяполучателя:(){Left}", false),
             new HotStringRuleRecord("htd",
-                () => DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")), // Вставка даты и время
-            new HotStringRuleRecord("hd", () => DateTime.Now.ToString("yyyy-MM-dd")), // Вставка даты
+                () => DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")), // Insert the current date and time
+            new HotStringRuleRecord("hd", () => DateTime.Now.ToString("yyyy-MM-dd")), // Insert the current date
         };
         rules.AddRange(GetNameRulesFromConfiguration());
         rules.AddRange(GetHotStringRulesFromConfiguration());
