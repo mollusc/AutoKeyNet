@@ -64,8 +64,9 @@ internal static class VirtualKeyExtension
         if (!isInvariantCulture)
         {
             var focusedHWnd = GetForegroundWindow();
-            var activeThread = GetWindowThreadProcessId(focusedHWnd, out _);
+            var activeThread = GetWindowThreadProcessId(focusedHWnd, out uint processId);
             hkl = GetKeyboardLayout(activeThread);
+            Debug.WriteLine($"ForegroundWindow={focusedHWnd}, ActiveThread={activeThread}, ProcessId={processId}, KeyboardLayout={hkl}");
         }
 
         ToUnicodeEx((uint)vkCode, lScanCode, bKeyState, sbString, (int)5, (uint)0, hkl);

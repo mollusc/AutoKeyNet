@@ -7,10 +7,13 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
-internal class HotStringFacade : BaseKeyFacade, IDisposable
+/// <summary>
+/// Class for handling HotStrings
+/// </summary>
+internal class HotStringHandler : BaseKeyHandler, IDisposable
 {
     /// <summary>
-    /// Перечень клавиш которые вызывают отчистку буфера
+    /// Array of virtual keys that trigger the clearing of the buffer
     /// </summary>
     private readonly ushort[] _clearBufferKey = {
             (ushort)VirtualKey.RIGHT,
@@ -20,13 +23,14 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
             (ushort)VirtualKey.END,
             (ushort)VirtualKey.HOME
         };
+
     /// <summary>
-    /// Перечень символов, которые являются окончанием слова
+    /// Array of letters that represent the end of a word
     /// </summary>
     private readonly char[] _endWordCharacters = { ' ', '-', '(', ')', '[', ']', '{', '}', ':', ';', '"', '/', '\\', ',', '.', '?', '!', '\t', '\n', '\r' };
 
     /// <summary>
-    /// Буфер нажатых клавиш
+    /// Buffer for pressed keys
     /// </summary>
     private string _buffer;
 
@@ -34,7 +38,14 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
     private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _keyboardHook;
 
-    public HotStringFacade(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
+    /// <summary>
+    /// Constructor of the class for handling HotStrings
+    /// </summary>
+    /// <param name="rules">List of rules</param>
+    /// <param name="kbdHook">Keyboard hook</param>
+    /// <param name="mouseHook">Mouse hook</param>
+    /// <param name="winHook">Windows hook</param>
+    public HotStringHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
     {
         _buffer = string.Empty;
 
@@ -45,11 +56,12 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
         _keyboardHook = kbdHook;
         _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
     }
+
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных с мышью 
+    /// Method for handling mouse events
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
         if ((MouseMessage)e.WParam is MouseMessage.WM_LBUTTONDOWN or MouseMessage.WM_LBUTTONUP
@@ -60,36 +72,34 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных со сменой текущего окна Windows 
+    /// Method for handling the event when the foreground window changes
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnWinHookEvent(object? sender, WinBaseHookEventArgs e)
     {
         _buffer = string.Empty;
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных с клавиатурой 
+    /// Method for handling keyboard events
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnKeyboardHookEvent(object? sender, KeyBaseHookEventArgs e)
     {
         if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
         {
             KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
                                                     throw new InvalidOperationException());
-            //if (kbd.dwExtraInfo != (UIntPtr)Constants.KEY_IGNORE)
-            //{
-            // Отчищаем буфер в случае специальных клавиш
+            // Clear the buffer
             if (_clearBufferKey.Contains((ushort)kbd.vkCode))
             {
                 _buffer = string.Empty;
                 return;
             }
 
-            // Удаляем последний символ из буфера если пользователь нажимает на BackSpace
+            // Remove the last character when the Backspace key is pressed
             if (kbd.vkCode == VirtualKey.BACK)
             {
                 if (_buffer.Length > 0)
@@ -102,15 +112,10 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
                 _buffer += e.Letter;
                 Debug.WriteLine($"HotString {e.Letter} --> {_buffer}");
             }
-            //}
         }
 
         if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYUP)
         {
-            //KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
-            //throw new InvalidOperationException());
-            //if (kbd.dwExtraInfo != (UIntPtr)Constants.KEY_IGNORE)
-            //{
             if (_endWordCharacters.Contains(e.Letter))
             {
                 CheckRules(true, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
@@ -121,21 +126,27 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
                 if (CheckRules(false, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
                     _buffer = string.Empty;
             }
-            //}
         }
     }
 
+
     /// <summary>
-    /// Проверка критериев на соответствие буфера 
+    /// Method for checking rules
     /// </summary>
-    private bool CheckRules(bool triggerByEndCharacter, string? windowTitle, string? windowClass,
+    /// <param name="isEndOfWord">True if the buffer contains a complete word; otherwise, false.</param>
+    /// <param name="windowTitle">Title of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowClass">Class of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowControl">Name of the focused control for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <returns>True if a rule was triggered; otherwise, false.</returns>
+    private bool CheckRules(bool isEndOfWord, string? windowTitle, string? windowClass,
         string? windowModule, string? windowControl)
     {
         foreach (BaseRuleRecord rule in Rules)
         {
             if (rule is HotStringRuleRecord hsRule
                 && _buffer.Equals(hsRule.KeyWord)
-                && triggerByEndCharacter == hsRule.TriggerByEndingCharacter
+                && isEndOfWord == hsRule.TriggerByEndingCharacter
                 && (hsRule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                     true))
             {
@@ -146,6 +157,9 @@ internal class HotStringFacade : BaseKeyFacade, IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Method for disposing of hooks
+    /// </summary>
     public void Dispose()
     {
         _winHook.OnHookEvent -= OnWinHookEvent;
