@@ -13,15 +13,16 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
         return new List<BaseRuleRecord>()
         {
 
-            new HotKeyRuleRecord("{XBUTTON1}X",
-                () => RunProgram("iexplore", "C:\\Program Files\\Internet Explorer\\iexplore.exe")),
-            new HotKeyRuleRecord("{XBUTTON1}E",
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_X DOWN}",
+                () => RunProgram("iexplore.exe", "C:\\Program Files\\Internet Explorer\\iexplore.exe")),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_E DOWN}",
                 () => RunProgram("EXCEL.EXE", "c:\\Program Files\\Microsoft Office\\Office15\\EXCEL.EXE")),
-            new HotKeyRuleRecord("{XBUTTON1}W",
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_W DOWN}",
                 () => RunProgram("WINWORD.EXE", "c:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE")),
-            new HotKeyRuleRecord("{XBUTTON1}T",
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_T DOWN}",
                 () => RunProgram("TOTALCMD64.EXE", "C:\\Program Files (x86)\\Total Commander\\TOTALCMD64.EXE")),
-            //new HotKeyRuleRecord("{LSHIFT}", )
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_S DOWN}",
+                () => RunProgram("OUTLOOK.EXE", "C:\\Program Files\\Microsoft Office\\Office15\\OUTLOOK.EXE")),
         };
     }
     private static void RunProgram(string processName, string pathToProgram)

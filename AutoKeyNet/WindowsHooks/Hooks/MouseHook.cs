@@ -63,11 +63,14 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
         {
             MouseLowLevelHook hookStruct = (MouseLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(MouseLowLevelHook)) ??
                                                          throw new InvalidOperationException());
-            MouseHookEventArgs mouseHookEventArgs = new MouseHookEventArgs(wParam, lParam,
-                hookStruct.mouseData >> 16, WindowHelper.GetActiveWindowTitle(),
-                WindowHelper.GetActiveWindowClass(),
-                WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
-            OnHookEvent?.Invoke(wParam, mouseHookEventArgs);
+            if (hookStruct.dwExtraInfo != (nuint)Constants.KEY_IGNORE)
+            {
+                MouseHookEventArgs mouseHookEventArgs = new MouseHookEventArgs(wParam, lParam,
+                    hookStruct.mouseData >> 16, WindowHelper.GetActiveWindowTitle(),
+                    WindowHelper.GetActiveWindowClass(),
+                    WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
+                OnHookEvent?.Invoke(wParam, mouseHookEventArgs);
+            }
         }
 
         return CallNextHookEx(HookId, nCode, wParam, lParam);

@@ -21,8 +21,8 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         { (MouseMessage.WM_LBUTTONDOWN, 0), VirtualKey.LBUTTON },
         { (MouseMessage.WM_RBUTTONDOWN, 0), VirtualKey.RBUTTON },
         { (MouseMessage.WM_MBUTTONDOWN, 0), VirtualKey.MBUTTON },
-        { (MouseMessage.WM_XBUTTONDOWN, 1), VirtualKey.XBUTTON1 },
-        { (MouseMessage.WM_XBUTTONDOWN, 2), VirtualKey.XBUTTON2 },
+        { (MouseMessage.WM_XBUTTONDOWN, Constants.XBUTTON1), VirtualKey.XBUTTON1 },
+        { (MouseMessage.WM_XBUTTONDOWN, Constants.XBUTTON2), VirtualKey.XBUTTON2 },
     };
     /// <summary>
     /// Dictionary of Windows mouse events and virtual keys, used for removing virtual mouse keys to the buffer.
@@ -32,8 +32,8 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         { (MouseMessage.WM_LBUTTONUP, 0), VirtualKey.LBUTTON },
         { (MouseMessage.WM_RBUTTONUP, 0), VirtualKey.RBUTTON },
         { (MouseMessage.WM_MBUTTONUP, 0), VirtualKey.MBUTTON },
-        { (MouseMessage.WM_XBUTTONUP, 1), VirtualKey.XBUTTON1 },
-        { (MouseMessage.WM_XBUTTONUP, 2), VirtualKey.XBUTTON2 },
+        { (MouseMessage.WM_XBUTTONUP, Constants.XBUTTON1), VirtualKey.XBUTTON1 },
+        { (MouseMessage.WM_XBUTTONUP, Constants.XBUTTON2), VirtualKey.XBUTTON2 },
     };
 
     /// <summary>
@@ -85,7 +85,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
         {
             _buffer.Add((ushort)kbd.vkCode);
-            //Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
+            Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
             if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
                 e.Cancel = true;
         }
@@ -116,7 +116,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             foreach (BaseRuleRecord rule in Rules)
             {
                 if (rule is HotKeyRuleRecord
-                    && _buffer.SetEquals(rule.InputKeys.Select(x => x.U.ki.wVk))
+                    && _buffer.SetEquals(rule.InputKeys.Select(x => x.U.ki.wVk != 0 ? x.U.ki.wVk: (ushort)MouseInputToVirtualKey(x.U.mi)))
                     && (rule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                         true))
                 {
@@ -128,6 +128,17 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
 
         return result;
     }
+
+    private static VirtualKey MouseInputToVirtualKey(MouseInput uMi) =>
+        uMi.dwFlags switch
+        {
+            MouseEvents.LEFTDOWN => VirtualKey.LBUTTON,
+            MouseEvents.RIGHTDOWN => VirtualKey.RBUTTON,
+            MouseEvents.MIDDLEDOWN => VirtualKey.MBUTTON,
+            MouseEvents.XDOWN when uMi.mouseData == Constants.XBUTTON1 => VirtualKey.XBUTTON1,
+            MouseEvents.XDOWN when uMi.mouseData == Constants.XBUTTON2 => VirtualKey.XBUTTON2,
+            _ => 0
+        };
 
     /// <summary>
     /// Method for disposing of hooks

@@ -20,6 +20,7 @@ public class BaseRuleRecord
     /// </summary>
     internal Input[] InputKeys { get; }
 
+
     /// <summary>
     /// Действие правила 
     /// </summary>
@@ -98,7 +99,10 @@ public class BaseRuleRecord
         var inputs = keys.ToInputs().ToArray();
         for (var i = 0; i < inputs.Length; i++)
         {
-            inputs[i].U.ki.dwFlags = KeyEventFlags.KEYUP;
+            if (inputs[i].type == InputType.INPUT_KEYBOARD)
+                inputs[i].U.ki.dwFlags = KeyEventFlags.KEYUP;
+            else if (inputs[i].type == InputType.INPUT_MOUSE)
+                inputs[i].U.mi.dwFlags = (MouseEvents)((int)inputs[i].U.mi.dwFlags << 1);
         }
 
         return inputs;

@@ -35,7 +35,7 @@ internal static class VirtualKeyExtension
         _ => GetKeyboardInput(virtualKey, flags, extraInfo)
     };
 
-    private static Input GetMouseInput(MouseEvents mouseEvents, int mouseData = 0) =>
+    private static Input GetMouseInput(MouseEvents mouseEvents, int mouseData = 0, nuint extraInfo = Constants.KEY_IGNORE) =>
         new Input()
         {
             type = InputType.INPUT_MOUSE,
@@ -45,7 +45,7 @@ internal static class VirtualKeyExtension
                 {
                     dwFlags = mouseEvents,
                     mouseData = mouseData,
-                    dwExtraInfo = 0,
+                    dwExtraInfo = extraInfo,
                 }
             }
         };
@@ -105,7 +105,7 @@ internal static class VirtualKeyExtension
             var focusedHWnd = GetForegroundWindow();
             var activeThread = GetWindowThreadProcessId(focusedHWnd, out uint processId);
             hkl = GetKeyboardLayout(activeThread);
-            Debug.WriteLine($"ForegroundWindow={focusedHWnd}, ActiveThread={activeThread}, ProcessId={processId}, KeyboardLayout={hkl}");
+            //Debug.WriteLine($"ForegroundWindow={focusedHWnd}, ActiveThread={activeThread}, ProcessId={processId}, KeyboardLayout={hkl}");
         }
 
         ToUnicodeEx((uint)vkCode, lScanCode, bKeyState, sbString, (int)5, (uint)0, hkl);
