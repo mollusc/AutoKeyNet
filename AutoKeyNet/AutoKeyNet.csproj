@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net7.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>d6400902-bf2a-45d9-85b9-5f8fe0d95a87</UserSecretsId>
+    <Platforms>AnyCPU;x64;x86</Platforms>
+  </PropertyGroup>
+
+</Project>
