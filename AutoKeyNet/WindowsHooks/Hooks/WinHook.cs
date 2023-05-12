@@ -4,7 +4,7 @@ using AutoKeyNet.WindowsHooks.Helper;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
-/// Класс хука окон Windows
+/// Class for Windows hooking
 /// </summary>
 internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
 {

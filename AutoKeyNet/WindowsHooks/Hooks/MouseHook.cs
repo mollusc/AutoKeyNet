@@ -7,17 +7,17 @@ using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
-/// Класс хука мыши
+/// Class for mouse hooking
 /// </summary>
 internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
 {
     /// <summary>
-    /// Делегат функции обратного вызова
+    /// Delegate for the callback function
     /// </summary>
     private readonly HookCallbackDelegate _hookCallback;
 
     /// <summary>
-    /// Конструктор класса хука мыши
+    /// Constructor of the class for keyboard hooking
     /// </summary>
     public MouseHook()
     {
@@ -26,14 +26,14 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     }
 
     /// <summary>
-    /// Событие возникающее при срабатывании хука
+    /// Event that is triggered when the mouse is moved or a mouse button is pressed.
     /// </summary>
     public event EventHandler<MouseHookEventArgs>? OnHookEvent;
 
     /// <summary>
-    /// Установить хук
+    /// Set of the mouse hook
     /// </summary>
-    /// <returns>Возвращает идентификатор хука</returns>
+    /// <returns>Identifier for the hook</returns>
     protected override nint SetHook()
     {
         using Process curProcess = Process.GetCurrentProcess();
@@ -48,13 +48,15 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     }
 
     /// <summary>
-    /// Функция обратного вызова возникающего при срабатывании хука.
+    /// Callback function that is called when a Windows hook is executed.
+    /// To prevent sending a mouse event to the system, you need to set MouseHookEventArgs.Cancel to true
     /// </summary>
-    /// <param name="nCode">Код, который используется для определения способа обработки сообщения</param>
-    /// <param name="wParam">Устанавливает идентификатор сообщения мыши</param>
-    /// <param name="lParam">Указатель на структуру</param>
-    /// <returns>Код, который используется для определения способа обработки сообщения</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <param name="nCode">A code the hook procedure uses to determine how to process the message</param>
+    /// <param name="wParam">The identifier of the mouse message</param>
+    /// <param name="lParam">A pointer to an Windows API MSLLHOOKSTRUCT structure</param>
+    /// <returns>A code the hook procedure uses to determine how to process the message</returns>
+    /// <exception cref="InvalidOperationException">An exception occurs when there is an error in retrieving
+    /// the MouseLowLevelHook struct from the lParam parameter.</exception>
     private nint LowLevelMouseProc(int nCode, nint wParam, nint lParam)
     {
         if (nCode >= Constants.HC_ACTION)

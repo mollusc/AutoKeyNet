@@ -47,14 +47,15 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
         throw new NullReferenceException();
     }
     /// <summary>
-    /// Функция обратного вызова возникающего при срабатывании хука.
-    /// Для прекращения передачи нажатия клавиши в систему необходимо установить свойство KeyboardHookEventArgs.Cancel в true
+    /// Callback function that is called when a Windows hook is executed.
+    /// To prevent sending a pressed key to the system, you need to set KeyboardHookEventArgs.Cancel to true
     /// </summary>
-    /// <param name="nCode">Код, который используется для определения способа обработки сообщения</param>
-    /// <param name="wParam">Идентификатор сообщения клавиатуры</param>
-    /// <param name="lParam">Указатель на структуру</param>
-    /// <returns>Код, который используется для определения способа обработки сообщения</returns>
-    /// <exception cref="InvalidOperationException"></exception>
+    /// <param name="nCode">A code the hook procedure uses to determine how to process the message</param>
+    /// <param name="wParam">The identifier of the keyboard message</param>
+    /// <param name="lParam">A pointer to a Windows API KBDLLHOOKSTRUCT structure</param>
+    /// <returns>A code the hook procedure uses to determine how to process the message</returns>
+    /// <exception cref="InvalidOperationException">An exception occurs when there is an error in retrieving
+    /// the KeyboardLowLevelHook struct from the lParam parameter.</exception>
     private nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam)
     {
         if (nCode >= Constants.HC_ACTION)
