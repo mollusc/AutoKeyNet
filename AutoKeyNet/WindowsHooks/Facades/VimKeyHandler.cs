@@ -1,6 +1,4 @@
-﻿//using System;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
@@ -9,15 +7,19 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
-internal class VimKeyFacade : BaseKeyFacade, IDisposable
+
+/// <summary>
+/// Class for emulating Vim commands
+/// </summary>
+internal class VimKeyHandler : BaseKeyHandler, IDisposable
 {
     /// <summary>
-    /// Промежуток времени между нажатием клавиш, которые должны считаться одной командой
+    /// Time in milliseconds to wait for a mapped sequence to complete
     /// </summary>
     private const int TimeoutLen = 500;
 
     /// <summary>
-    /// Перечень клавиш которые вызывают отчистку буфера
+    /// Array of virtual keys that trigger the clearing of the buffer
     /// </summary>
     private readonly ushort[] _clearBufferKey = {
             (ushort)VirtualKey.RIGHT,
@@ -29,17 +31,17 @@ internal class VimKeyFacade : BaseKeyFacade, IDisposable
         };
 
     /// <summary>
-    /// Буфер нажатых клавиш
+    /// Buffer for pressed keys
     /// </summary>
     private string _buffer;
 
     /// <summary>
-    /// Временная отметка последней нажатой клавиши
+    /// Timestamp for when the last key was pressed.
     /// </summary>
     private uint _lastTimeStamp;
 
     /// <summary>
-    /// Генератор токенов для отмены выполнения правил
+    /// Cancellation token source for cancelling the triggering of rules.
     /// </summary>
     private CancellationTokenSource _source = new();
 
@@ -47,7 +49,14 @@ internal class VimKeyFacade : BaseKeyFacade, IDisposable
     private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _keyboardHook;
 
-    public VimKeyFacade(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
+    /// <summary>
+    /// Constructor of objects for emulating Vim commands.
+    /// </summary>
+    /// <param name="rules">List of rules</param>
+    /// <param name="kbdHook">Keyboard hook</param>
+    /// <param name="mouseHook">Mouse hook</param>
+    /// <param name="winHook">Windows hook</param>
+    public VimKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
     {
         _buffer = string.Empty;
 
@@ -60,10 +69,10 @@ internal class VimKeyFacade : BaseKeyFacade, IDisposable
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных с мышью 
+    /// Method for handling mouse events
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
         if ((MouseMessage)e.WParam is MouseMessage.WM_LBUTTONDOWN or MouseMessage.WM_LBUTTONUP
@@ -74,36 +83,34 @@ internal class VimKeyFacade : BaseKeyFacade, IDisposable
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных со сменой текущего окна Windows 
+    /// Method for handling the event when the foreground window changes
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnWinHookEvent(object? sender, WinBaseHookEventArgs e)
     {
         _buffer = string.Empty;
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных с клавиатурой 
+    /// Method for handling keyboard events
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnKeyboardHookEvent(object? sender, KeyBaseHookEventArgs e)
     {
         if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
         {
             KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
                                                     throw new InvalidOperationException());
-            //if (kbd.dwExtraInfo != (UIntPtr)Constants.KEY_IGNORE)
-            //{
-            // Отчищаем буфер в случае специальных клавиш
+            // Clear the buffer
             if (_clearBufferKey.Contains((ushort)kbd.vkCode))
             {
                 _buffer = string.Empty;
                 return;
             }
 
-            // Если после нажатия последней клавиши прошло больше секунды то сбросить буфер
+            // Clear the buffer if the time between pressed keys is longer than TimeoutLen.
             if ((kbd.time - _lastTimeStamp) > TimeoutLen)
                 _buffer = string.Empty;
 
@@ -135,24 +142,23 @@ internal class VimKeyFacade : BaseKeyFacade, IDisposable
 
                 _buffer = string.Empty;
             }
-            //}
         }
 
         if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYUP)
         {
-            //KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
-            //throw new InvalidOperationException());
-            //if (kbd.dwExtraInfo != (UIntPtr)Constants.KEY_IGNORE)
-            //{
             if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
                 _buffer = string.Empty;
-            //}
         }
     }
 
     /// <summary>
-    /// Проверка критериев на соответствие буфера 
+    /// Method for checking rules
     /// </summary>
+    /// <param name="windowTitle">Title of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowClass">Class of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowControl">Name of the focused control for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <returns>True if a rule was triggered; otherwise, false.</returns>
     private bool CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
         VimKeyRuleRecord? foundRule = null;
@@ -189,6 +195,9 @@ internal class VimKeyFacade : BaseKeyFacade, IDisposable
         return false;
     }
 
+    /// <summary>
+    /// Method for disposing of hooks
+    /// </summary>
     public void Dispose()
     {
         _winHook.OnHookEvent -= OnWinHookEvent;

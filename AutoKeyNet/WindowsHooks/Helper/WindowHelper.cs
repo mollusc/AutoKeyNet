@@ -7,6 +7,10 @@ using AutoKeyNet.WindowsHooks.WindowsStruct;
 namespace AutoKeyNet.WindowsHooks.Helper;
 internal static class WindowHelper
 {
+    /// <summary>
+    /// This method retrieves the title of the currently active window.
+    /// </summary>
+    /// <returns>Title</returns>
     internal static string? GetActiveWindowTitle()
     {
         const int nChars = 256;
@@ -63,11 +67,6 @@ internal static class WindowHelper
         IntPtr activeWindowHandle = GetForegroundWindow();
 
         IntPtr activeWindowThread = GetWindowThreadProcessId(activeWindowHandle, IntPtr.Zero);
-        //IntPtr thisWindowThread = GetCurrentThreadId();
-
-        //AttachThreadInput(activeWindowThread, thisWindowThread, true);
-        //IntPtr focusedControlHandle = GetFocus();
-        //AttachThreadInput(activeWindowThread, thisWindowThread, false);
 
         GetInfo(activeWindowThread, out GUIThreadInfo info);
         IntPtr focusedControlHandle = info.hwndFocus;
@@ -78,8 +77,6 @@ internal static class WindowHelper
         return null;
     }
 
-    [DllImport("user32.dll")]
-    static extern bool GetGUIThreadInfo(uint idThread, ref GUIThreadInfo lpgui);
 
     public static bool GetInfo(IntPtr hwnd, out GUIThreadInfo lpgui)
     {
@@ -90,6 +87,10 @@ internal static class WindowHelper
 
         return GetGUIThreadInfo(threadId, ref lpgui);
     }
+
+    #region Windows API functions
+    [DllImport("user32.dll")]
+    static extern bool GetGUIThreadInfo(uint idThread, ref GUIThreadInfo lpgui);
 
     [DllImport("user32.dll")]
     static extern IntPtr GetWindowThreadProcessId(IntPtr hWnd, IntPtr ProcessId);
@@ -105,4 +106,5 @@ internal static class WindowHelper
 
     [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
     static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+    #endregion
 }

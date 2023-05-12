@@ -2,16 +2,24 @@
 using AutoKeyNet.WindowsHooks.Rule;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
+
+/// <summary>
+/// Class for combining all key handlers
+/// </summary>
 public class AutoKeyNetFacade : IDisposable
 {
-    private readonly HotKeyFacade _hotKey;
-    private readonly HotStringFacade _hotString;
-    private readonly VimKeyFacade _vimKey;
+    private readonly HotKeyHandler _hotKeyHandler;
+    private readonly HotStringHandler _hotStringHandler;
+    private readonly VimKeyHandler _vimKeyHandler;
 
     private readonly WinHook _winHook;
     private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _kbdHook;
 
+    /// <summary>
+    /// Constructor for initializing all key handlers
+    /// </summary>
+    /// <param name="rules">List of rules</param>
     public AutoKeyNetFacade(IEnumerable<BaseRuleRecord> rules)
     {
         _winHook = new WinHook();
@@ -19,19 +27,22 @@ public class AutoKeyNetFacade : IDisposable
         _kbdHook = new KeyboardHook();
 
         var baseRuleRecords = rules as BaseRuleRecord[] ?? rules.ToArray();
-        _hotKey = new HotKeyFacade(baseRuleRecords, _kbdHook, _mouseHook);
-        _hotString = new HotStringFacade(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
-        _vimKey = new VimKeyFacade(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
+        _hotKeyHandler = new HotKeyHandler(baseRuleRecords, _kbdHook, _mouseHook);
+        _hotStringHandler = new HotStringHandler(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
+        _vimKeyHandler = new VimKeyHandler(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
     }
 
+    /// <summary>
+    /// Method for disposing of objects
+    /// </summary>
     public void Dispose()
     {
         _winHook?.Dispose();
         _mouseHook?.Dispose();
         _kbdHook?.Dispose();
 
-        _hotKey?.Dispose();
-        _hotString?.Dispose();
-        _vimKey?.Dispose();
+        _hotKeyHandler?.Dispose();
+        _hotStringHandler?.Dispose();
+        _vimKeyHandler?.Dispose();
     }
 }

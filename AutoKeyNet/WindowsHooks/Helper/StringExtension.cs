@@ -1,25 +1,35 @@
 ﻿using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using System.Reflection.Emit;
+using System.Windows.Forms;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
+
 /// <summary>
-/// Вспомогательные функции для работы со строками
+/// Extension methods for the string data type.
 /// </summary>
 internal static class StringExtension
 {
     /// <summary>
-    /// Словарь с перечнем виртуальных клавиш
+    /// Dictionary with virtual keys
     /// </summary>
     private static readonly Dictionary<string, VirtualKey> VkDictionary =
         new(Enum.GetNames<VirtualKey>().Select(x => new KeyValuePair<string, VirtualKey>(x, (VirtualKey)Enum.Parse(typeof(VirtualKey), x))), StringComparer.CurrentCultureIgnoreCase);
 
+    /// <summary>
+    /// Dictionary for specifying keys that require additional flags.
+    /// </summary>
     private static readonly Dictionary<string, KeyEventFlags> FlagsDictionary = new()
         {
             {Enum.GetName(VirtualKey.SHIFT)!, KeyEventFlags.EXTENDEDKEY},
             {Enum.GetName(VirtualKey.CONTROL)!, KeyEventFlags.EXTENDEDKEY},
             {Enum.GetName(VirtualKey.MENU)!, KeyEventFlags.EXTENDEDKEY},
-        };
+    };
 
+
+    /// <summary>
+    /// Dictionary for storing flags associated with key events
+    /// </summary>
     private static readonly Dictionary<string, KeyEventFlags> ActionFlagDictionary =
         new(StringComparer.CurrentCultureIgnoreCase)
         {
@@ -28,13 +38,12 @@ internal static class StringExtension
         };
 
     /// <summary>
-    /// Преобразует строку символов в конкретные клавиши на клавиатуре.
-    /// Кроме того допускается использование тегов для специальных клавиш такие как {LEFT}, {RIGHT} и т.д.
-    /// Все значения специальных клавиш находятся в переменной SpecialKeys
+    /// A method that converts a string object to Input structures.
+    /// This method allows for the use of tags to represent special keys such as "{LEFT}" and "{RIGHT}"
     /// </summary>
-    /// <param name="text">Исходный текст для анализа</param>
-    /// <param name="extraInfo"></param>
-    /// <returns>Возвращает картеж с значениями виртуальной клавиши и scan кода</returns>
+    /// <param name="text">Text</param>
+    /// <param name="extraInfo">An additional value associated with the keystroke</param>
+    /// <returns>Input structures that represent the text</returns>
     internal static IEnumerable<Input> ToInputs(this string text, nuint extraInfo = Constants.KEY_IGNORE)
     {
         for (int i = 0; i < text.Length; i++)

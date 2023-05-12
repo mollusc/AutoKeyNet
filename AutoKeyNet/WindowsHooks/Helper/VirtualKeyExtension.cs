@@ -6,22 +6,19 @@ using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
+/// <summary>
+/// Extension methods for virtual keys
+/// </summary>
 internal static class VirtualKeyExtension
 {
-    internal static IEnumerable<Input> ToInputsPressKey(this VirtualKey virtualKey, KeyEventFlags flags = 0,
-        nuint extraInfo = Constants.KEY_IGNORE)
-    {
-        foreach (KeyEventFlags extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
-            yield return virtualKey.ToInput(flags | extraFlag, extraInfo);
-    }
 
     /// <summary>
-    /// Выполняется преобразование KeyInput в Input для последующей отправки через метод SendInput
+    /// Method for converting a virtual key to an Input structure with a key down event
     /// </summary>
-    /// <param name="virtualKey"></param>
-    /// <param name="flags"></param>
-    /// <param name="extraInfo"></param>
-    /// <returns></returns>
+    /// <param name="virtualKey">The virtual key that will be converted into an Input structure</param>
+    /// <param name="flags">Specifies various aspects of a keystroke</param>
+    /// <param name="extraInfo">An additional value associated with the keystroke</param>
+    /// <returns>An Input structure that represents the virtual key</returns>
     internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo = Constants.KEY_IGNORE)
     {
         return new Input
@@ -40,13 +37,25 @@ internal static class VirtualKeyExtension
         };
     }
 
+    /// <summary>
+    /// Method for converting a virtual key to an Input structure with a key down and key up events
+    /// </summary>
+    /// <param name="virtualKey">Virtual key to be converted to an Input structure</param>
+    /// <param name="flags">Specifies various aspects of a keystroke</param>
+    /// <param name="extraInfo">An additional value associated with the keystroke</param>
+    /// <returns>Input structures that represent the virtual key</returns>
+    internal static IEnumerable<Input> ToInputsPressKey(this VirtualKey virtualKey, KeyEventFlags flags = 0,
+        nuint extraInfo = Constants.KEY_IGNORE)
+    {
+        foreach (KeyEventFlags extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
+            yield return virtualKey.ToInput(flags | extraFlag, extraInfo);
+    }
 
     /// <summary>
     /// Преобразование виртуальной клавиши в конкретный символ Юникода с учетом регистра
     /// (клавиши Shift)
     /// </summary>
     /// <param name="vkCode">Виртуальный код клавиши</param>
-    /// <param name="lScanCode"></param>
     /// <param name="isInvariantCulture"></param>
     /// <returns>Символ в формате Юникод</returns>
     internal static char ToUnicode(this VirtualKey vkCode, bool isInvariantCulture = false)
@@ -64,8 +73,9 @@ internal static class VirtualKeyExtension
         if (!isInvariantCulture)
         {
             var focusedHWnd = GetForegroundWindow();
-            var activeThread = GetWindowThreadProcessId(focusedHWnd, out _);
+            var activeThread = GetWindowThreadProcessId(focusedHWnd, out uint processId);
             hkl = GetKeyboardLayout(activeThread);
+            Debug.WriteLine($"ForegroundWindow={focusedHWnd}, ActiveThread={activeThread}, ProcessId={processId}, KeyboardLayout={hkl}");
         }
 
         ToUnicodeEx((uint)vkCode, lScanCode, bKeyState, sbString, (int)5, (uint)0, hkl);

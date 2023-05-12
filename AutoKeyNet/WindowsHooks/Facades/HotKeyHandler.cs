@@ -9,13 +9,12 @@ using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 namespace AutoKeyNet.WindowsHooks.Facades;
 
 /// <summary>
-/// Отслеживание нажатия горячих клавиш
+/// Class for handling hotkeys
 /// </summary>
-internal class HotKeyFacade : BaseKeyFacade, IDisposable
+internal class HotKeyHandler : BaseKeyHandler, IDisposable
 {
     /// <summary>
-    /// Словарь перечня событий Windows и соответствующая им виртуальная клавиша. Предназначено для активации
-    /// сравнения клавиши с перечнем условий
+    /// Dictionary of Windows mouse events and virtual keys, used for adding virtual mouse keys to the buffer.
     /// </summary>
     private readonly Dictionary<(MouseMessage, int), VirtualKey> _activateMouseKeyEvent = new()
     {
@@ -26,8 +25,7 @@ internal class HotKeyFacade : BaseKeyFacade, IDisposable
         { (MouseMessage.WM_XBUTTONDOWN, 2), VirtualKey.XBUTTON2 },
     };
     /// <summary>
-    /// Словарь перечня событий Windows и соответствующая ему виртуальная клавиша. Предназначено для ДЕактивации
-    /// сравнения клавиши с перечнем условий
+    /// Dictionary of Windows mouse events and virtual keys, used for removing virtual mouse keys to the buffer.
     /// </summary>
     private readonly Dictionary<(MouseMessage, int), VirtualKey> _deactivateMouseKeyEvent = new()
     {
@@ -39,14 +37,20 @@ internal class HotKeyFacade : BaseKeyFacade, IDisposable
     };
 
     /// <summary>
-    /// Буфер нажатых клавиш
+    /// Buffer for pressed keys
     /// </summary>
     private readonly HashSet<ushort> _buffer = new();
 
     private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _keyboardHook;
 
-    public HotKeyFacade(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
+    /// <summary>
+    /// Constructor of the class for handling hotkeys
+    /// </summary>
+    /// <param name="rules">List of rules</param>
+    /// <param name="kbdHook">Keyboard hook</param>
+    /// <param name="mouseHook">Mouse hook</param>
+    public HotKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
     {
         _mouseHook = mouseHook;
         _mouseHook.OnHookEvent += OnMouseHookEvent;
@@ -55,10 +59,10 @@ internal class HotKeyFacade : BaseKeyFacade, IDisposable
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных с мышью 
+    /// Method for handling mouse events
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
         if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var aKey))
@@ -70,39 +74,40 @@ internal class HotKeyFacade : BaseKeyFacade, IDisposable
     }
 
     /// <summary>
-    /// Метод выполняется при возникновении событий связанных с клавиатурой 
+    /// Method for handling keyboard events
     /// </summary>
-    /// <param name="sender">Инициатор события</param>
-    /// <param name="e">Параметры события</param>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
     private void OnKeyboardHookEvent(object? sender, KeyBaseHookEventArgs e)
     {
         KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
                                                 throw new InvalidOperationException());
-        //if (kbd.dwExtraInfo != (UIntPtr)Constants.KEY_IGNORE)
-        //{
-            if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
-            {
-                _buffer.Add((ushort)kbd.vkCode);
-                Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
-                if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
-                    e.Cancel = true;
-            }
+        if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYDOWN)
+        {
+            _buffer.Add((ushort)kbd.vkCode);
+            //Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
+            if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
+                e.Cancel = true;
+        }
 
-            if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYUP)
-            {
-                _buffer.Remove((ushort)kbd.vkCode);
-            }
+        if (e.WParam == (IntPtr)KeyboardMessage.WM_KEYUP)
+        {
+            _buffer.Remove((ushort)kbd.vkCode);
+        }
 
-            // Panic Button. Возможность отчистить содержимое буфера если он перестанет
-            // работать корректно
-            if (kbd.vkCode == VirtualKey.ESCAPE)
-                _buffer.Clear();
-        //}
+        // Panic Button
+        if (kbd.vkCode == VirtualKey.ESCAPE)
+            _buffer.Clear();
     }
 
     /// <summary>
-    /// Проверка критериев на соответствие буфера 
+    /// Method for checking rules
     /// </summary>
+    /// <param name="windowTitle">Title of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowClass">Class of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <param name="windowControl">Name of the focused control for filtering rules. If the variable is null, the filter is not applied.</param>
+    /// <returns>True if a rule was triggered; otherwise, false.</returns>
     private bool CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
         bool result = false;
@@ -124,6 +129,9 @@ internal class HotKeyFacade : BaseKeyFacade, IDisposable
         return result;
     }
 
+    /// <summary>
+    /// Method for disposing of hooks
+    /// </summary>
     public void Dispose()
     {
         _mouseHook.OnHookEvent -= OnMouseHookEvent;
