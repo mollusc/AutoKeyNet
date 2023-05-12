@@ -68,11 +68,26 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var aKey))
             _buffer.Add((ushort)aKey);
         if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var dKey))
+        {
             _buffer.Remove((ushort)dKey);
+            if (_ruleTriggered)
+            {
+                if (_ruleTriggered)
+                    e.Cancel = true;
+                if (_buffer.Count == 0)
+                    _ruleTriggered = false;
+            }
 
-        CheckRules(e.WindowTitle, e.WindowTitle, e.WindowModule, e.WindowControl);
+        }
+
+        if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
+        {
+            _ruleTriggered = true;
+            e.Cancel = true;
+        }
     }
 
+    private bool _ruleTriggered = false;
     /// <summary>
     /// Method for handling keyboard events
     /// </summary>
@@ -87,17 +102,28 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             _buffer.Add((ushort)kbd.vkCode);
             Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
             if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
+            {
+                _ruleTriggered = true;
                 e.Cancel = true;
+            }
         }
 
         if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
         {
             _buffer.Remove((ushort)kbd.vkCode);
+            if (_ruleTriggered)
+                e.Cancel = true;
+            if (_buffer.Count == 0)
+                _ruleTriggered = false;
+
         }
 
         // Panic Button
         if (kbd.vkCode == VirtualKey.ESCAPE)
+        {
             _buffer.Clear();
+            _ruleTriggered = false;
+        }
     }
 
     /// <summary>
@@ -116,7 +142,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             foreach (BaseRuleRecord rule in Rules)
             {
                 if (rule is HotKeyRuleRecord
-                    && _buffer.SetEquals(rule.InputKeys.Select(x => x.U.ki.wVk != 0 ? x.U.ki.wVk: (ushort)MouseInputToVirtualKey(x.U.mi)))
+                    && _buffer.SetEquals(rule.InputKeys.Select(x => x.U.ki.wVk != 0 ? x.U.ki.wVk : (ushort)MouseInputToVirtualKey(x.U.mi)))
                     && (rule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                         true))
                 {

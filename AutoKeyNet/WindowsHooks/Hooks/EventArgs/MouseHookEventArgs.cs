@@ -61,4 +61,9 @@ internal class MouseHookEventArgs : BaseHookEventArgs
     /// Name of the focused control
     /// </summary>
     public string? WindowControl { get; }
+
+    /// <summary>
+    /// Property to prevent sending mouse event to the system.
+    /// </summary>
+    public bool Cancel { get; set; }
 }

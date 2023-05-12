@@ -5,8 +5,8 @@
 /// </summary>
 public class HotKeyRuleRecord : BaseRuleRecord
 {
-    public HotKeyRuleRecord(string keyWord, Action hotKeyRun, WindowCondition? checkWindowCondition = null)
-        : base(keyWord, hotKeyRun, checkWindowCondition)
+    public HotKeyRuleRecord(string keyWord, Action hotKeyRun, WindowCondition? checkWindowCondition = null, bool releaseKeysBeforeRun = false)
+        : base(keyWord, hotKeyRun, checkWindowCondition, releaseKeysBeforeRun)
     {
     }
     public HotKeyRuleRecord(string keyWord, Func<string> hotKeyFunc, WindowCondition? checkWindowCondition = null)

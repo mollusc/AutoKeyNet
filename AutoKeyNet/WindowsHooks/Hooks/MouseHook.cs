@@ -70,6 +70,8 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
                     WindowHelper.GetActiveWindowClass(),
                     WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
                 OnHookEvent?.Invoke(wParam, mouseHookEventArgs);
+                if (mouseHookEventArgs.Cancel)
+                    return 1;
             }
         }
 

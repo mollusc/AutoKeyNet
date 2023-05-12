@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
@@ -47,11 +48,22 @@ public class BaseRuleRecord
     /// <param name="keyWord">—трока определ€юща€ услови€ срабатывани€ правила</param>
     /// <param name="run">ƒействи€ выполн€емое при соблюдении условий</param>
     /// <param name="checkWindowCondition">ѕроверка услови€ относ€ща€с€ к текущему окну</param>
-    protected BaseRuleRecord(string keyWord, Action run, WindowCondition? checkWindowCondition)
+    protected BaseRuleRecord(string keyWord, Action run, WindowCondition? checkWindowCondition, bool releaseKeysBeforeRun = false)
     {
         KeyWord = keyWord;
         InputKeys = keyWord.ToInputs().ToArray();
-        Run = run;
+        if (releaseKeysBeforeRun)
+        {
+            Run = () =>
+            {
+                List<Input> listInputs = new List<Input>(ReleaseKeys(keyWord));
+                Input[] inputs = listInputs.ToArray();
+                SendInput(inputs);
+                run.Invoke();
+            };
+        }
+        else
+            Run = run;
         CheckWindowCondition = checkWindowCondition;
     }
 
