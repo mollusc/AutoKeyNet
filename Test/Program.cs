@@ -1,49 +1,48 @@
 using System.Diagnostics;
 using AutoKeyNet.WindowsHooks.Facades;
 using AutoKeyNet.WindowsHooks.Rule;
-using Test.RuleFactory;
+using AutoKeyNetApp.RuleFactory;
 using Application = System.Windows.Forms.Application;
 
-namespace Test
+namespace AutoKeyNetApp;
+
+internal static class Program
 {
-    internal static class Program
+
+    private static readonly List<BaseRuleRecord> Rules = new();
+
+    /// <summary>
+    ///  The main entry point for the application.
+    /// </summary>
+    [STAThread]
+    private static void Main()
     {
-
-        private static readonly List<BaseRuleRecord> Rules = new();
-
-        /// <summary>
-        ///  The main entry point for the application.
-        /// </summary>
-        [STAThread]
-        static void Main()
+        try
         {
-            try
-            {
-                InitializeRules();
-                using AutoKeyNetFacade autoKeyNet = new AutoKeyNetFacade(Rules);
-                Application.Run();
-            }
-            catch (Exception e)
-            {
-                Trace.TraceError(e.Message);
-            }
+            InitializeRules();
+            using var autoKeyNet = new AutoKeyNetFacade(Rules);
+            Application.Run();
         }
-
-        /// <summary>
-        /// Инициализация всех правил
-        /// </summary>
-        private static void InitializeRules()
+        catch (Exception e)
         {
-            BaseRuleFactory[] ruleFactories =
-            {
-                new HotStringFactory(),
-                new HotKeyLButtonFactory(),
-                new HotKeyProgramFactory(),
-                new OutlookRuleFactory()
-            };
-
-            foreach (BaseRuleFactory ruleFactory in ruleFactories)
-                Rules.AddRange(ruleFactory.Create());
+            Trace.TraceError(e.Message);
         }
+    }
+
+    /// <summary>
+    /// Инициализация всех правил
+    /// </summary>
+    private static void InitializeRules()
+    {
+        BaseRuleFactory[] ruleFactories =
+        {
+            new HotStringRuleFactory(),
+            new HotKeyLButtonRuleFactory(),
+            new HotKeyProgramRuleFactory(),
+            new OutlookRuleFactory()
+        };
+
+        foreach (BaseRuleFactory ruleFactory in ruleFactories)
+            Rules.AddRange(ruleFactory.Create());
     }
 }

@@ -1,6 +1,4 @@
-﻿using System.Linq.Expressions;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using System.Runtime.InteropServices;
+﻿using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 using AutoKeyNet.WindowsHooks.Helper;
 

@@ -1,19 +1,15 @@
 ﻿//using System;
-using System.Collections.Generic;
+
 using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
-using System.Text;
-using System.Threading.Tasks;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
-using Timer = System.Threading.Timer;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
-internal class VimKeyFacade : BaseKeyFacade
+internal class VimKeyFacade : BaseKeyFacade, IDisposable
 {
     /// <summary>
     /// Промежуток времени между нажатием клавиш, которые должны считаться одной командой
@@ -47,13 +43,20 @@ internal class VimKeyFacade : BaseKeyFacade
     /// </summary>
     private CancellationTokenSource _source = new();
 
+    private readonly WinHook _winHook;
+    private readonly MouseHook _mouseHook;
+    private readonly KeyboardHook _keyboardHook;
+
     public VimKeyFacade(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
     {
         _buffer = string.Empty;
 
-        winHook.OnHookEvent += OnWinHookEvent;
-        mouseHook.OnHookEvent += OnMouseHookEvent;
-        kbdHook.OnHookEvent += OnKeyboardHookEvent;
+        _winHook = winHook;
+        _winHook.OnHookEvent += OnWinHookEvent;
+        _mouseHook = mouseHook;
+        _mouseHook.OnHookEvent += OnMouseHookEvent;
+        _keyboardHook = kbdHook;
+        _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
     }
 
     /// <summary>
@@ -184,5 +187,12 @@ internal class VimKeyFacade : BaseKeyFacade
         }
 
         return false;
+    }
+
+    public void Dispose()
+    {
+        _winHook.OnHookEvent -= OnWinHookEvent;
+        _mouseHook.OnHookEvent -= OnMouseHookEvent;
+        _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
     }
 }

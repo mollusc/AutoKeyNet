@@ -1,8 +1,4 @@
-﻿using AutoKeyNet.WindowsHooks.Helper;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-
-namespace AutoKeyNet.WindowsHooks.Rule;
+﻿namespace AutoKeyNet.WindowsHooks.Rule;
 
 /// <summary>
 /// Класс определяющий условия по типу команд vim

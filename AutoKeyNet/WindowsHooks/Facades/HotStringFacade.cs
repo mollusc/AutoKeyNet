@@ -7,7 +7,7 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
-internal class HotStringFacade : BaseKeyFacade
+internal class HotStringFacade : BaseKeyFacade, IDisposable
 {
     /// <summary>
     /// Перечень клавиш которые вызывают отчистку буфера
@@ -30,13 +30,20 @@ internal class HotStringFacade : BaseKeyFacade
     /// </summary>
     private string _buffer;
 
+    private readonly WinHook _winHook;
+    private readonly MouseHook _mouseHook;
+    private readonly KeyboardHook _keyboardHook;
+
     public HotStringFacade(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook, WinHook winHook) : base(rules)
     {
         _buffer = string.Empty;
 
-        winHook.OnHookEvent += OnWinHookEvent;
-        mouseHook.OnHookEvent += OnMouseHookEvent;
-        kbdHook.OnHookEvent += OnKeyboardHookEvent;
+        _winHook = winHook;
+        _winHook.OnHookEvent += OnWinHookEvent;
+        _mouseHook = mouseHook;
+        _mouseHook.OnHookEvent += OnMouseHookEvent;
+        _keyboardHook = kbdHook;
+        _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
     }
     /// <summary>
     /// Метод выполняется при возникновении событий связанных с мышью 
@@ -137,5 +144,12 @@ internal class HotStringFacade : BaseKeyFacade
             }
         }
         return false;
+    }
+
+    public void Dispose()
+    {
+        _winHook.OnHookEvent -= OnWinHookEvent;
+        _mouseHook.OnHookEvent -= OnMouseHookEvent;
+        _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
     }
 }

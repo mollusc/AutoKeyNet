@@ -1,6 +1,5 @@
 ﻿using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
-using static AutoKeyNet.WindowsHooks.Helper.WindowHelper;
 
 namespace AutoKeyNet.WindowsHooks.WindowsStruct;
 
