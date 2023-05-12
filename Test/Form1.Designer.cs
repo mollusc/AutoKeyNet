@@ -1,4 +1,4 @@
-﻿namespace Test
+﻿namespace AutoKeyNetApp
 {
     partial class Form1
     {

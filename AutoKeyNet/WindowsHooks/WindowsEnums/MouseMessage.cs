@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace AutoKeyNet.WindowsHooks.WindowsEnums;
+﻿namespace AutoKeyNet.WindowsHooks.WindowsEnums;
 internal enum MouseMessage
 {
     WM_MOUSEMOVE = 0x200,

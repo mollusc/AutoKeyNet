@@ -10,7 +10,7 @@ namespace AutoKeyNet.WindowsHooks.Facades;
 /// <summary>
 /// Отслеживание нажатия горячих клавиш
 /// </summary>
-internal class HotKeyFacade : BaseKeyFacade
+internal class HotKeyFacade : BaseKeyFacade, IDisposable
 {
     /// <summary>
     /// Словарь перечня событий Windows и соответствующая им виртуальная клавиша. Предназначено для активации
@@ -42,10 +42,15 @@ internal class HotKeyFacade : BaseKeyFacade
     /// </summary>
     private readonly HashSet<ushort> _buffer = new();
 
+    private readonly MouseHook _mouseHook;
+    private readonly KeyboardHook _keyboardHook;
+
     public HotKeyFacade(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
     {
-        mouseHook.OnHookEvent += OnMouseHookEvent;
-        kbdHook.OnHookEvent += OnKeyboardHookEvent;
+        _mouseHook = mouseHook;
+        _mouseHook.OnHookEvent += OnMouseHookEvent;
+        _keyboardHook = kbdHook;
+        _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
     }
 
     /// <summary>
@@ -55,9 +60,9 @@ internal class HotKeyFacade : BaseKeyFacade
     /// <param name="e">Параметры события</param>
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
-        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out VirtualKey aKey))
+        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var aKey))
             _buffer.Add((ushort)aKey);
-        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out VirtualKey dKey))
+        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var dKey))
             _buffer.Remove((ushort)dKey);
 
         CheckRules(e.WindowTitle, e.WindowTitle, e.WindowModule, e.WindowControl);
@@ -115,5 +120,11 @@ internal class HotKeyFacade : BaseKeyFacade
         }
 
         return result;
+    }
+
+    public void Dispose()
+    {
+        _mouseHook.OnHookEvent -= OnMouseHookEvent;
+        _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
     }
 }

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoKeyNet", "AutoKeyNet\Au
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MolluscOutlookLibrary", "MolluscOutlookLibrary\MolluscOutlookLibrary.csproj", "{FA168852-D5FB-46FD-B08D-A16056805DDD}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test", "Test\Test.csproj", "{1325FD1D-90C5-45DF-877F-228A3FACBF5A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AutoKeyNetApp", "Test\AutoKeyNetApp.csproj", "{1325FD1D-90C5-45DF-877F-228A3FACBF5A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

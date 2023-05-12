@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AutoKeyNet.WindowsHooks.Hooks;
-using AutoKeyNet.WindowsHooks.Rule;
+﻿using AutoKeyNet.WindowsHooks.Rule;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
 /// <summary>

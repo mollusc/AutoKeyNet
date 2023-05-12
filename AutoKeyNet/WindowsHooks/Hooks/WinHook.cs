@@ -1,8 +1,5 @@
 ﻿using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
-using System.Text;
 using AutoKeyNet.WindowsHooks.Helper;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;

@@ -1,5 +1,4 @@
-﻿using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>

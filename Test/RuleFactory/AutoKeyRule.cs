@@ -1,4 +1,4 @@
-﻿namespace Test.RuleFactory;
+﻿namespace AutoKeyNetApp.RuleFactory;
 
 public struct AutoKeyRule
 {

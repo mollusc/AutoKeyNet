@@ -1,17 +1,12 @@
 ﻿using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Rule;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
 public class AutoKeyNetFacade : IDisposable
 {
-    private HotKeyFacade _hotKey;
-    private HotStringFacade _hotString;
-    private VimKeyFacade _vimKey;
+    private readonly HotKeyFacade _hotKey;
+    private readonly HotStringFacade _hotString;
+    private readonly VimKeyFacade _vimKey;
 
     private readonly WinHook _winHook;
     private readonly MouseHook _mouseHook;
@@ -19,9 +14,9 @@ public class AutoKeyNetFacade : IDisposable
 
     public AutoKeyNetFacade(IEnumerable<BaseRuleRecord> rules)
     {
-        _winHook = new();
-        _mouseHook = new();
-        _kbdHook = new();
+        _winHook = new WinHook();
+        _mouseHook = new MouseHook();
+        _kbdHook = new KeyboardHook();
 
         var baseRuleRecords = rules as BaseRuleRecord[] ?? rules.ToArray();
         _hotKey = new HotKeyFacade(baseRuleRecords, _kbdHook, _mouseHook);
@@ -34,5 +29,9 @@ public class AutoKeyNetFacade : IDisposable
         _winHook?.Dispose();
         _mouseHook?.Dispose();
         _kbdHook?.Dispose();
+
+        _hotKey?.Dispose();
+        _hotString?.Dispose();
+        _vimKey?.Dispose();
     }
 }
