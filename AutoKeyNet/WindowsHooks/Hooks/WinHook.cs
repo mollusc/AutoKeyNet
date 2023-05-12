@@ -1,6 +1,7 @@
 ﻿using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
@@ -33,8 +34,8 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     /// <returns>Возвращает идентификатор хука</returns>
     protected override nint SetHook()
     {
-        return SetWinEventHook(Constants.EVENT_SYSTEM_FOREGROUND, Constants.EVENT_SYSTEM_FOREGROUND, nint.Zero,
-            _hookEvent, 0, 0, Constants.WINEVENT_OUTOFCONTEXT);
+        return SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, nint.Zero,
+            _hookEvent, 0, 0, WINEVENT_OUTOFCONTEXT);
     }
 
     /// <summary>
@@ -61,14 +62,6 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     protected override void Unhook() => UnhookWinEvent(HookId);
 
     #region Windows API functions
-    [DllImport("user32.dll")]
-    static extern nint SetWinEventHook(uint eventMin, uint eventMax, nint hmodWinEventProc,
-        WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
 
-    [DllImport("user32.dll")]
-    static extern bool UnhookWinEvent(nint hWinEventHook);
-
-    delegate void WinEventDelegate(nint hWinEventHook, uint eventType, nint hwnd, int idObject, int idChild,
-        uint dwEventThread, uint dwmsEventTime);
     #endregion
 }

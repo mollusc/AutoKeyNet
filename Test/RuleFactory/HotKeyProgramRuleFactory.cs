@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNet.WindowsHooks.WinApi;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using AutoKeyNet.WindowsHooks.WindowsEnums;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -44,17 +42,4 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
             Process.Start(pathToProgram);
         }
     }
-
-    //[DllImport("user32.dll")]
-    //public static extern IntPtr GetForegroundWindow();
-    //[DllImport("user32.dll", CharSet = CharSet.Auto)]
-    //public static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-    //public void ChangeLanguage(string language)
-    //{
-    //    switch (language)
-    //    {
-    //        case "RU":
-    //            PostMessage(GetForegroundWindow(), 0x0050, 2, 0);
-    //    }
-    //}
 }

@@ -1,5 +1,6 @@
 ﻿namespace AutoKeyNet.WindowsHooks.WindowsEnums;
-internal enum VirtualKey : ushort
+
+public enum VirtualKey : ushort
 {
     ///<summary>
     ///Left mouse button

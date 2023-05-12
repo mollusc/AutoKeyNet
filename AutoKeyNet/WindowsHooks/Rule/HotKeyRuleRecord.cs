@@ -1,4 +1,6 @@
-﻿namespace AutoKeyNet.WindowsHooks.Rule;
+﻿using AutoKeyNet.WindowsHooks.WindowsEnums;
+
+namespace AutoKeyNet.WindowsHooks.Rule;
 
 /// <summary>
 /// Class responsible for defining hotkey rules. 

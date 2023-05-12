@@ -2,8 +2,10 @@
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
@@ -40,7 +42,7 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
         using ProcessModule? curModule = curProcess.MainModule;
         if (curModule != null)
         {
-            return SetWindowsHookEx((int)HookType.WH_MOUSE_LL, _hookCallback, GetModuleHandle(curModule.ModuleName),
+            return SetWindowsHookEx((int)HookType.WH_MOUSE_LL, _hookCallback, NativeMethods.GetModuleHandle(curModule.ModuleName),
                 0);
         }
 
@@ -59,11 +61,11 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     /// the MouseLowLevelHook struct from the lParam parameter.</exception>
     private nint LowLevelMouseProc(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= Constants.HC_ACTION)
+        if (nCode >= HC_ACTION)
         {
             MouseLowLevelHook hookStruct = (MouseLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(MouseLowLevelHook)) ??
                                                          throw new InvalidOperationException());
-            if (hookStruct.dwExtraInfo != (nuint)Constants.KEY_IGNORE)
+            if (hookStruct.dwExtraInfo != (nuint)KEY_IGNORE)
             {
                 MouseHookEventArgs mouseHookEventArgs = new MouseHookEventArgs(wParam, lParam,
                     hookStruct.mouseData >> 16, WindowHelper.GetActiveWindowTitle(),
@@ -75,7 +77,7 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
             }
         }
 
-        return CallNextHookEx(HookId, nCode, wParam, lParam);
+        return NativeMethods.CallNextHookEx(HookId, nCode, wParam, lParam);
     }
 
     /// <summary>
@@ -83,15 +85,4 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     /// </summary>
     protected override void Unhook() => UnhookWindowsHookEx(HookId);
 
-    #region Windows API functions
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UnhookWindowsHookEx(nint hhk);
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern nint SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, nint hMod,
-        uint dwThreadId);
-
-    private delegate nint HookCallbackDelegate(int nCode, nint wParam, nint lParam);
-    #endregion
 }

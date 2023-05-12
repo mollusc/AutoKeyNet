@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 internal static class WindowHelper
@@ -66,9 +67,9 @@ internal static class WindowHelper
     {
         nint activeWindowHandle = GetForegroundWindow();
 
-        nint activeWindowThread = GetWindowThreadProcessId(activeWindowHandle, nint.Zero);
+        uint activeWindowThread = GetWindowThreadProcessId(activeWindowHandle, out _);
 
-        GetInfo(activeWindowThread, out GUIThreadInfo info);
+        GetInfo((nint)activeWindowThread, out GUIThreadInfo info);
         nint focusedControlHandle = info.hwndFocus;
 
         StringBuilder className = new StringBuilder(256);
@@ -88,23 +89,4 @@ internal static class WindowHelper
         return GetGUIThreadInfo(threadId, ref lpgui);
     }
 
-    #region Windows API functions
-    [DllImport("user32.dll")]
-    static extern bool GetGUIThreadInfo(uint idThread, ref GUIThreadInfo lpgui);
-
-    [DllImport("user32.dll")]
-    static extern nint GetWindowThreadProcessId(nint hWnd, nint ProcessId);
-
-    [DllImport("user32.dll")]
-    static extern nint GetForegroundWindow();
-
-    [DllImport("user32.dll")]
-    static extern uint GetWindowThreadProcessId(nint hWnd, out uint lpdwProcessId);
-
-    [DllImport("user32.dll")]
-    static extern int GetWindowText(nint hWnd, StringBuilder text, int count);
-
-    [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Auto)]
-    static extern int GetClassName(nint hWnd, StringBuilder lpClassName, int nMaxCount);
-    #endregion
 }

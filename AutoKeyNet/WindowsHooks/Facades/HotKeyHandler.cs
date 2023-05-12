@@ -8,6 +8,7 @@ using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.WinApi;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
 
@@ -19,24 +20,24 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <summary>
     /// Dictionary of Windows mouse events and virtual keys, used for adding virtual mouse keys to the buffer.
     /// </summary>
-    private readonly Dictionary<(MouseMessage, int), VirtualKey> _activateMouseKeyEvent = new()
+    private readonly Dictionary<(MouseMessage, uint), VirtualKey> _activateMouseKeyEvent = new()
     {
         { (MouseMessage.WM_LBUTTONDOWN, 0), VirtualKey.LBUTTON },
         { (MouseMessage.WM_RBUTTONDOWN, 0), VirtualKey.RBUTTON },
         { (MouseMessage.WM_MBUTTONDOWN, 0), VirtualKey.MBUTTON },
-        { (MouseMessage.WM_XBUTTONDOWN, Constants.XBUTTON1), VirtualKey.XBUTTON1 },
-        { (MouseMessage.WM_XBUTTONDOWN, Constants.XBUTTON2), VirtualKey.XBUTTON2 },
+        { (MouseMessage.WM_XBUTTONDOWN, XBUTTON1), VirtualKey.XBUTTON1 },
+        { (MouseMessage.WM_XBUTTONDOWN, XBUTTON2), VirtualKey.XBUTTON2 },
     };
     /// <summary>
     /// Dictionary of Windows mouse events and virtual keys, used for removing virtual mouse keys to the buffer.
     /// </summary>
-    private readonly Dictionary<(MouseMessage, int), VirtualKey> _deactivateMouseKeyEvent = new()
+    private readonly Dictionary<(MouseMessage, uint), VirtualKey> _deactivateMouseKeyEvent = new()
     {
         { (MouseMessage.WM_LBUTTONUP, 0), VirtualKey.LBUTTON },
         { (MouseMessage.WM_RBUTTONUP, 0), VirtualKey.RBUTTON },
         { (MouseMessage.WM_MBUTTONUP, 0), VirtualKey.MBUTTON },
-        { (MouseMessage.WM_XBUTTONUP, Constants.XBUTTON1), VirtualKey.XBUTTON1 },
-        { (MouseMessage.WM_XBUTTONUP, Constants.XBUTTON2), VirtualKey.XBUTTON2 },
+        { (MouseMessage.WM_XBUTTONUP, XBUTTON1), VirtualKey.XBUTTON1 },
+        { (MouseMessage.WM_XBUTTONUP, XBUTTON2), VirtualKey.XBUTTON2 },
     };
 
     /// <summary>
@@ -90,10 +91,10 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="e">Event arguments</param>
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
-        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var vkDown))
+        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkDown))
             e.Cancel = ProcessKeyDown((ushort)vkDown, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
 
-        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var vkUp))
+        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkUp))
             e.Cancel = ProcessKeyUp((ushort)vkUp);
     }
 
@@ -201,8 +202,8 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             MouseEvents.LEFTDOWN => VirtualKey.LBUTTON,
             MouseEvents.RIGHTDOWN => VirtualKey.RBUTTON,
             MouseEvents.MIDDLEDOWN => VirtualKey.MBUTTON,
-            MouseEvents.XDOWN when uMi.mouseData == Constants.XBUTTON1 => VirtualKey.XBUTTON1,
-            MouseEvents.XDOWN when uMi.mouseData == Constants.XBUTTON2 => VirtualKey.XBUTTON2,
+            MouseEvents.XDOWN when uMi.mouseData == NativeMethods.XBUTTON1 => VirtualKey.XBUTTON1,
+            MouseEvents.XDOWN when uMi.mouseData == NativeMethods.XBUTTON2 => VirtualKey.XBUTTON2,
             _ => 0
         };
 

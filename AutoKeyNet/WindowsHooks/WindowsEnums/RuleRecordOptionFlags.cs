@@ -1,4 +1,4 @@
-﻿namespace AutoKeyNet.WindowsHooks.Rule;
+﻿namespace AutoKeyNet.WindowsHooks.WindowsEnums;
 
 [Flags]
 public enum HotKeyRuleRecordOptionFlags

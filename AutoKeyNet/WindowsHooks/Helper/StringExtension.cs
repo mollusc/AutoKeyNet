@@ -2,6 +2,7 @@
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 using System.Reflection.Emit;
 using System.Windows.Forms;
+using AutoKeyNet.WindowsHooks.WinApi;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
@@ -44,7 +45,7 @@ internal static class StringExtension
     /// <param name="text">Text</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>Input structures that represent the text</returns>
-    internal static IEnumerable<Input> ToInputs(this string text, nuint extraInfo = Constants.KEY_IGNORE)
+    internal static IEnumerable<Input> ToInputs(this string text, nuint extraInfo = NativeMethods.KEY_IGNORE)
     {
         for (int i = 0; i < text.Length; i++)
         {

@@ -1,9 +1,9 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
-using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Rule;
 
@@ -73,7 +73,7 @@ public class BaseRuleRecord
         var inputs = replaceWord.ToInputs().ToArray();
         return () =>
         {
-            NativeMethods.SendInput(inputs);
+            SendInput(inputs);
         };
     }
     protected static Action SendText(Func<string> replaceFunc)
@@ -81,7 +81,7 @@ public class BaseRuleRecord
         return () =>
         {
             var inputs = replaceFunc.Invoke().ToInputs().ToArray();
-            NativeMethods.SendInput(inputs);
+            SendInput(inputs);
         };
     }
 
@@ -92,7 +92,7 @@ public class BaseRuleRecord
             List<Input> listInputs = new List<Input>(ReleaseKeys(releaseKeys));
             listInputs.AddRange(replaceFunc.Invoke().ToInputs().ToArray());
             Input[] inputs = listInputs.ToArray();
-            NativeMethods.SendInput(inputs);
+            SendInput(inputs);
         };
     }
 
@@ -103,7 +103,7 @@ public class BaseRuleRecord
         Input[] inputs = listInputs.ToArray();
         return () =>
         {
-            NativeMethods.SendInput(inputs);
+            SendInput(inputs);
         };
     }
 

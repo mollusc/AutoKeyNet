@@ -1,3 +1,4 @@
+using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
@@ -15,7 +16,7 @@ internal static class CharExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>An Input structure that represents the letter</returns>
-    internal static Input ToInput(this char letter, KeyEventFlags flags, nuint extraInfo = Constants.KEY_IGNORE)
+    internal static Input ToInput(this char letter, KeyEventFlags flags, nuint extraInfo = NativeMethods.KEY_IGNORE)
     {
         return new Input
         {
@@ -40,7 +41,7 @@ internal static class CharExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>Input structures that represent the letter</returns>
-    internal static IEnumerable<Input> ToInputsPressKey(this char letter, KeyEventFlags flags = 0, nuint extraInfo = Constants.KEY_IGNORE)
+    internal static IEnumerable<Input> ToInputsPressKey(this char letter, KeyEventFlags flags = 0, nuint extraInfo = NativeMethods.KEY_IGNORE)
     {
         foreach (KeyEventFlags extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
             yield return letter.ToInput(flags | extraFlag, extraInfo);

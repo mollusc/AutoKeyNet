@@ -1,4 +1,5 @@
 ﻿using System.Runtime.InteropServices;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 
@@ -48,14 +49,4 @@ internal abstract class BaseHook : IDisposable
     /// Remove of the hook
     /// </summary>
     protected abstract void Unhook();
-
-    #region Windows API functions
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    protected static extern nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
-
-    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    protected static extern nint GetModuleHandle(string lpModuleName);
-
-    #endregion
 }

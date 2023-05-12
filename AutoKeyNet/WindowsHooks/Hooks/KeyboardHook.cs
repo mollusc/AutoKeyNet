@@ -4,6 +4,7 @@ using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
@@ -40,8 +41,7 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
         using ProcessModule? curModule = curProcess.MainModule;
         if (curModule != null)
         {
-            return SetWindowsHookEx((int)HookType.WH_KEYBOARD_LL, _hookCallback,
-                GetModuleHandle(curModule.ModuleName), 0);
+            return SetWindowsHookEx((int)HookType.WH_KEYBOARD_LL, _hookCallback, GetModuleHandle(curModule.ModuleName), 0);
         }
 
         throw new NullReferenceException();
@@ -58,11 +58,11 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
     /// the KeyboardLowLevelHook struct from the lParam parameter.</exception>
     private nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam)
     {
-        if (nCode >= Constants.HC_ACTION)
+        if (nCode >= HC_ACTION)
         {
             KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(KeyboardLowLevelHook)) ??
                                                     throw new InvalidOperationException());
-            if (kbd.dwExtraInfo != (nuint)Constants.KEY_IGNORE)
+            if (kbd.dwExtraInfo != (nuint)KEY_IGNORE)
             {
                 KeyboardHookEventArgs keyboardHookEventArgs = new KeyboardHookEventArgs((Keys)kbd.vkCode,
                     kbd.vkCode.ToUnicode(), kbd.vkCode.ToUnicode(true), wParam, lParam, WindowHelper.GetActiveWindowTitle(),
@@ -77,20 +77,10 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
         return CallNextHookEx(HookId, nCode, wParam, lParam);
     }
 
+
     /// <summary>
     /// Remove of the keyboard hook
     /// </summary>
     protected override void Unhook() => UnhookWindowsHookEx(HookId);
 
-    #region Windows API functions
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    private static extern nint SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, nint hMod,
-        uint dwThreadId);
-
-    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-    [return: MarshalAs(UnmanagedType.Bool)]
-    private static extern bool UnhookWindowsHookEx(nint hhk);
-
-    private delegate nint HookCallbackDelegate(int nCode, nint wParam, nint lParam);
-    #endregion
 }

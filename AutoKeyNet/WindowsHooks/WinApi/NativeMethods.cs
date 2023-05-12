@@ -1,27 +1,84 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using System.Text;
-using System.Threading.Tasks;
+using AutoKeyNet.WindowsHooks.Hooks;
+using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
-namespace AutoKeyNet.WindowsHooks.WinApi
+namespace AutoKeyNet.WindowsHooks.WinApi;
+
+internal static class NativeMethods
 {
-    public static class NativeMethods
-    {
-        public static Task SendInputAsync(Input[] inputs) => Task.Run(() => SendInput(inputs));
-        public static void SendInput(Input[] inputs) => SendInput((uint)inputs.Length, inputs, Input.Size);
 
-        [DllImport("user32.dll", SetLastError = true)]
-        public static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
+    internal const uint KEY_IGNORE = 0xFFC3D44F;
+    internal const uint HC_ACTION = 0;
+    internal const uint WINEVENT_OUTOFCONTEXT = 0;
+    internal const uint EVENT_SYSTEM_FOREGROUND = 3;
+    internal const uint MAPVK_VK_TO_VSC = 0x00;
+    internal const uint XBUTTON1 = 0x0001;
+    internal const uint XBUTTON2 = 0x0002;
 
-        [DllImport("user32.dll")]
-        public static extern bool SetForegroundWindow(IntPtr hWnd);
+    internal static Task SendInputAsync(Input[] inputs) => Task.Run(() => SendInput(inputs));
 
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+    internal static void SendInput(Input[] inputs) => SendInput((uint)inputs.Length, inputs, Input.Size);
 
-        public const int SW_MAXIMIZE = 3;
-    }
+    [DllImport("user32.dll", SetLastError = true)]
+    internal static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
+
+    [DllImport("user32.dll")]
+    internal static extern uint MapVirtualKey(uint uCode, uint uMapType);
+
+    [DllImport("USER32.dll")]
+    internal static extern short GetKeyState(VirtualKey nVirtKey);
+
+    [DllImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool GetKeyboardState(byte[] lpKeyState);
+
+    [DllImport("user32.dll")]
+    internal static extern int ToUnicodeEx(VirtualKey wVirtKey, uint wScanCode, byte[] lpKeyState,
+        [Out] [MarshalAs(UnmanagedType.LPWStr)]
+        StringBuilder pwszBuff, int cchBuff, uint wFlags, nint dwhkl);
+
+    [DllImport("user32.dll")]
+    internal static extern nint GetKeyboardLayout(uint idThread);
+
+    [DllImport("user32.dll", ExactSpelling = true)]
+    internal static extern uint GetWindowThreadProcessId(nint hWnd, out uint processId);
+
+    [DllImport("user32.dll")]
+    internal static extern nint GetForegroundWindow();
+
+    [DllImport("user32.dll")]
+    internal static extern bool GetGUIThreadInfo(uint idThread, ref GUIThreadInfo lpgui);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    internal static extern int GetWindowText(nint hWnd, StringBuilder text, int count);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    internal static extern int GetClassName(nint hWnd, StringBuilder lpClassName, int nMaxCount);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    internal static extern nint CallNextHookEx(nint hhk, int nCode, nint wParam, nint lParam);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    internal static extern nint GetModuleHandle(string lpModuleName);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    internal static extern bool UnhookWindowsHookEx(nint hhk);
+
+    [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+    internal static extern nint SetWindowsHookEx(int idHook, HookCallbackDelegate lpfn, nint hMod, uint dwThreadId);
+
+    [DllImport("user32.dll")]
+    internal static extern nint SetWinEventHook(uint eventMin, uint eventMax, nint hmodWinEventProc, WinEventDelegate lpfnWinEventProc, uint idProcess, uint idThread, uint dwFlags);
+
+    [DllImport("user32.dll")]
+    internal static extern bool UnhookWinEvent(nint hWinEventHook);
+
+    internal delegate nint HookCallbackDelegate(int nCode, nint wParam, nint lParam);
+
+    internal delegate void WinEventDelegate(nint hWinEventHook, uint eventType, nint hwnd, int idObject,
+        int idChild,
+        uint dwEventThread, uint dwmsEventTime);
 }
