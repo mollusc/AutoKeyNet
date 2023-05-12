@@ -4,7 +4,7 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 namespace AutoKeyNet.WindowsHooks.WindowsStruct;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct MouseInput
+public struct MouseInput
 {
     internal int dx;
     internal int dy;

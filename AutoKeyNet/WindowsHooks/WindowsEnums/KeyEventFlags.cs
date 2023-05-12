@@ -1,6 +1,6 @@
 ﻿namespace AutoKeyNet.WindowsHooks.WindowsEnums;
 [Flags]
-internal enum KeyEventFlags : uint
+public enum KeyEventFlags : uint
 {
     KEYDOWN = 0x000,
     EXTENDEDKEY = 0x0001,

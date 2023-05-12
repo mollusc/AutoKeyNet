@@ -2,9 +2,11 @@
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 using System.Runtime.InteropServices;
+using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+using AutoKeyNet.WindowsHooks.WinApi;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
 
@@ -41,6 +43,9 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// </summary>
     private readonly HashSet<ushort> _buffer = new();
 
+    private readonly HashSet<ushort> _prefixKeysToSuppressKeyBehaviorInHotKey = new();
+    private bool _prefixKeyDown = false;
+
     private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _keyboardHook;
 
@@ -56,6 +61,25 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         _mouseHook.OnHookEvent += OnMouseHookEvent;
         _keyboardHook = kbdHook;
         _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
+        Preprocessing();
+    }
+
+    private void Preprocessing()
+    {
+        foreach (BaseRuleRecord rule in Rules)
+        {
+            if (rule is HotKeyRuleRecord hotKeyRule
+                && hotKeyRule.Options.HasFlag(HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey))
+            {
+                if (InputToVirtualKey(hotKeyRule).FirstOrDefault() is var virtualKey)
+                    _prefixKeysToSuppressKeyBehaviorInHotKey.Add(virtualKey);
+            }
+        }
+    }
+
+    private static IEnumerable<ushort> InputToVirtualKey(BaseRuleRecord rule)
+    {
+        return rule.InputKeys.Select(x => x.U.ki.wVk != 0 ? x.U.ki.wVk : (ushort)MouseInputToVirtualKey(x.U.mi));
     }
 
     /// <summary>
@@ -65,26 +89,11 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="e">Event arguments</param>
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
-        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var aKey))
-            _buffer.Add((ushort)aKey);
-        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var dKey))
-        {
-            _buffer.Remove((ushort)dKey);
-            if (_ruleTriggered)
-            {
-                if (_ruleTriggered)
-                    e.Cancel = true;
-                if (_buffer.Count == 0)
-                    _ruleTriggered = false;
-            }
+        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var vkDown))
+            e.Cancel = ProcessKeyDown((ushort)vkDown, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
 
-        }
-
-        if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
-        {
-            _ruleTriggered = true;
-            e.Cancel = true;
-        }
+        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, e.MouseData), out var vkUp))
+            e.Cancel = ProcessKeyUp((ushort)vkUp);
     }
 
     private bool _ruleTriggered = false;
@@ -95,35 +104,75 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="e">Event arguments</param>
     private void OnKeyboardHookEvent(object? sender, KeyboardHookEventArgs e)
     {
-        KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
-                                                throw new InvalidOperationException());
+        KeyboardLowLevelHook kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ?? throw new InvalidOperationException());
+        VirtualKey vk = kbd.vkCode;
+
         if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
-        {
-            _buffer.Add((ushort)kbd.vkCode);
-            Debug.WriteLine($"HotKey {(Keys)kbd.vkCode} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
-            if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
-            {
-                _ruleTriggered = true;
-                e.Cancel = true;
-            }
-        }
+            e.Cancel = ProcessKeyDown((ushort)vk, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
 
         if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
-        {
-            _buffer.Remove((ushort)kbd.vkCode);
-            if (_ruleTriggered)
-                e.Cancel = true;
-            if (_buffer.Count == 0)
-                _ruleTriggered = false;
+            e.Cancel = ProcessKeyUp((ushort)vk);
 
-        }
+    }
 
-        // Panic Button
-        if (kbd.vkCode == VirtualKey.ESCAPE)
+
+    private bool ProcessKeyDown(ushort vk, string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
+    {
+        if (vk == (ushort)VirtualKey.ESCAPE) // Panic button
         {
             _buffer.Clear();
             _ruleTriggered = false;
+            return false;
         }
+
+        _buffer.Add(vk);
+        Debug.WriteLine($"HotKey {(Keys)vk} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
+        if (_buffer.Count == 1 && _prefixKeysToSuppressKeyBehaviorInHotKey.Contains(vk))
+        {
+            Debug.WriteLine($"      DEBUG: Suppress key down: {(Keys)vk}");
+
+            _prefixKeyDown = true;
+            return true;
+        }
+        _prefixKeyDown = false;
+
+        if (CheckRules(windowTitle, windowClass, windowModule, windowControl))
+        {
+            Debug.WriteLine($"      DEBUG: Suppress by check rules key down: {(Keys)vk}");
+
+            _ruleTriggered = true;
+            return true;
+        }
+        return false;
+    }
+
+    private bool ProcessKeyUp(ushort vk)
+    {
+        Debug.WriteLine($"Before remove key {(Keys)vk} from buffer {string.Join(',', _buffer.Select(k => (Keys)k))}");
+        _buffer.Remove(vk);
+
+        if (_prefixKeyDown && _buffer.Count == 0 && _prefixKeysToSuppressKeyBehaviorInHotKey.Contains(vk))
+        {
+            Debug.WriteLine($"      DEBUG: Regenerate key down: {(Keys)vk}");
+
+            VirtualKey virtualKey = (VirtualKey)vk;
+            var inputs = virtualKey.ToInputsPressKey().ToArray();
+            NativeMethods.SendInputAsync(inputs).ConfigureAwait(false);
+            _prefixKeyDown = false;
+            return true;
+        }
+        _prefixKeyDown = false;
+
+        if (_ruleTriggered)
+        {
+            Debug.WriteLine($"      DEBUG: Suppress by ruleTriggered key up: {(Keys)vk}");
+
+            if (_buffer.Count == 0)
+                _ruleTriggered = false;
+            return true;
+        }
+
+        return false;
     }
 
     /// <summary>

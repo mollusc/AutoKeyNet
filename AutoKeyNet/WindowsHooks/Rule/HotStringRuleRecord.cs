@@ -1,6 +1,7 @@
 ﻿using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 using AutoKeyNet.WindowsHooks.Helper;
+using AutoKeyNet.WindowsHooks.WinApi;
 
 namespace AutoKeyNet.WindowsHooks.Rule;
 
@@ -31,7 +32,7 @@ public sealed class HotStringRuleRecord : BaseRuleRecord
         var inputs = GetInputs(keyWord, replaceWord, triggerByEndingCharacter);
         return () =>
         {
-            SendInput(inputs);
+            NativeMethods.SendInput(inputs);
         };
     }
     private static Action SendText(string keyWord, Func<string> replaceFunc, bool triggerByEndingCharacter)
@@ -39,7 +40,7 @@ public sealed class HotStringRuleRecord : BaseRuleRecord
         return () =>
         {
             var inputs = GetInputs(keyWord, replaceFunc.Invoke(), triggerByEndingCharacter);
-            SendInput(inputs);
+            NativeMethods.SendInput(inputs);
         };
     }
 

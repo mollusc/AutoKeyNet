@@ -4,7 +4,7 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 namespace AutoKeyNet.WindowsHooks.WindowsStruct;
 
 [StructLayout(LayoutKind.Sequential)]
-internal struct Input
+public struct Input
 {
     public InputType type;
     public InputUnion U;

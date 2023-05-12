@@ -21,16 +21,16 @@ internal static class VirtualKeyExtension
     internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
         nuint extraInfo = Constants.KEY_IGNORE) => virtualKey switch
     {
-        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.LEFTDOWN),
         VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.LEFTUP),
-        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.RIGHTDOWN),
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.LEFTDOWN),
         VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.RIGHTUP),
-        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.MIDDLEDOWN),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.RIGHTDOWN),
         VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.MIDDLEUP),
-        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, Constants.XBUTTON1),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.MIDDLEDOWN),
         VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.XUP, Constants.XBUTTON1),
-        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, Constants.XBUTTON2),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, Constants.XBUTTON1),
         VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => GetMouseInput(MouseEvents.XUP, Constants.XBUTTON2),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => GetMouseInput(MouseEvents.XDOWN, Constants.XBUTTON2),
 
         _ => GetKeyboardInput(virtualKey, flags, extraInfo)
     };

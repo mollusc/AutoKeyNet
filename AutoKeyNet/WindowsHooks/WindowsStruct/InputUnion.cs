@@ -3,7 +3,7 @@ using System.Runtime.InteropServices;
 namespace AutoKeyNet.WindowsHooks.WindowsStruct;
 
 [StructLayout(LayoutKind.Explicit)]
-internal struct InputUnion
+public struct InputUnion
 {
     [FieldOffset(0)]
     public MouseInput mi;

@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
+using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 
@@ -48,21 +49,21 @@ public class BaseRuleRecord
     /// <param name="keyWord">—трока определ€юща€ услови€ срабатывани€ правила</param>
     /// <param name="run">ƒействи€ выполн€емое при соблюдении условий</param>
     /// <param name="checkWindowCondition">ѕроверка услови€ относ€ща€с€ к текущему окну</param>
-    protected BaseRuleRecord(string keyWord, Action run, WindowCondition? checkWindowCondition, bool releaseKeysBeforeRun = false)
+    protected BaseRuleRecord(string keyWord, Action run, WindowCondition? checkWindowCondition)
     {
         KeyWord = keyWord;
         InputKeys = keyWord.ToInputs().ToArray();
-        if (releaseKeysBeforeRun)
-        {
-            Run = () =>
-            {
-                List<Input> listInputs = new List<Input>(ReleaseKeys(keyWord));
-                Input[] inputs = listInputs.ToArray();
-                SendInput(inputs);
-                run.Invoke();
-            };
-        }
-        else
+        //if (releaseKeysBeforeRun)
+        //{
+        //    Run = () =>
+        //    {
+        //        List<Input> listInputs = new List<Input>(ReleaseKeys(keyWord));
+        //        Input[] inputs = listInputs.ToArray();
+        //        SendInput(inputs);
+        //        run.Invoke();
+        //    };
+        //}
+        //else
             Run = run;
         CheckWindowCondition = checkWindowCondition;
     }
@@ -72,7 +73,7 @@ public class BaseRuleRecord
         var inputs = replaceWord.ToInputs().ToArray();
         return () =>
         {
-            SendInput(inputs);
+            NativeMethods.SendInput(inputs);
         };
     }
     protected static Action SendText(Func<string> replaceFunc)
@@ -80,7 +81,7 @@ public class BaseRuleRecord
         return () =>
         {
             var inputs = replaceFunc.Invoke().ToInputs().ToArray();
-            SendInput(inputs);
+            NativeMethods.SendInput(inputs);
         };
     }
 
@@ -91,7 +92,7 @@ public class BaseRuleRecord
             List<Input> listInputs = new List<Input>(ReleaseKeys(releaseKeys));
             listInputs.AddRange(replaceFunc.Invoke().ToInputs().ToArray());
             Input[] inputs = listInputs.ToArray();
-            SendInput(inputs);
+            NativeMethods.SendInput(inputs);
         };
     }
 
@@ -102,7 +103,7 @@ public class BaseRuleRecord
         Input[] inputs = listInputs.ToArray();
         return () =>
         {
-            SendInput(inputs);
+            NativeMethods.SendInput(inputs);
         };
     }
 
@@ -119,9 +120,4 @@ public class BaseRuleRecord
 
         return inputs;
     }
-
-    internal static void SendInput(Input[] inputs) => SendInput((uint)inputs.Length, inputs, Input.Size);
-
-    [DllImport("user32.dll", SetLastError = true)]
-    private static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
 }
