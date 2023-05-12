@@ -1,4 +1,5 @@
 ﻿using AutoKeyNet.WindowsHooks.Rule;
+using AutoKeyNetApp.Helpers;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -24,7 +25,6 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
 
     private static string PasteWithoutFormat()
     {
-        Clipboard.SetText(Clipboard.GetText(TextDataFormat.UnicodeText));
-        return "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}";
+        return ClipboardHelper.GetPlainTextFromClipboard() ?? string.Empty;
     }
 }
