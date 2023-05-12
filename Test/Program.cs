@@ -2,17 +2,18 @@ using System.Diagnostics;
 using AutoKeyNet.WindowsHooks.Facades;
 using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNetApp.RuleFactory;
-using Application = System.Windows.Forms.Application;
 
 namespace AutoKeyNetApp;
 
 internal static class Program
 {
-
+    /// <summary>
+    ///     List of rules
+    /// </summary>
     private static readonly List<BaseRuleRecord> Rules = new();
 
     /// <summary>
-    ///  The main entry point for the application.
+    ///     The main entry point for the application.
     /// </summary>
     [STAThread]
     private static void Main()
@@ -30,7 +31,7 @@ internal static class Program
     }
 
     /// <summary>
-    /// Инициализация всех правил
+    ///     Initialize all rules
     /// </summary>
     private static void InitializeRules()
     {
@@ -42,7 +43,7 @@ internal static class Program
             new OutlookRuleFactory()
         };
 
-        foreach (BaseRuleFactory ruleFactory in ruleFactories)
+        foreach (var ruleFactory in ruleFactories)
             Rules.AddRange(ruleFactory.Create());
     }
 }

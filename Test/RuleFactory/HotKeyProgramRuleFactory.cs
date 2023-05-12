@@ -6,7 +6,7 @@ using AutoKeyNet.WindowsHooks.WindowsEnums;
 namespace AutoKeyNetApp.RuleFactory;
 
 /// <summary>
-/// Создание горячих клавиш по запуску программ
+/// Create hot keys for start programs
 /// </summary>
 internal class HotKeyProgramRuleFactory : BaseRuleFactory
 {
@@ -23,6 +23,11 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
         };
     }
 
+    /// <summary>
+    /// Run program
+    /// </summary>
+    /// <param name="processName">Process name of the program</param>
+    /// <param name="pathToProgram">The absolute path to the executable file of the program</param>
     private static void RunProgram(string processName, string pathToProgram)
     {
         bool result = false;

@@ -1,42 +1,46 @@
-﻿using System.Diagnostics;
-using AutoKeyNet.WindowsHooks.Rule;
+﻿using AutoKeyNet.WindowsHooks.Rule;
+using Microsoft.Office.Interop.Outlook;
 using MolluscOutlookLibrary;
 using MailItem = MolluscOutlookLibrary.MailItem;
-using Outlook = Microsoft.Office.Interop.Outlook;
 
 namespace AutoKeyNetApp.RuleFactory;
 
 /// <summary>
-/// Создание горячих клавиш по работе с Outlook
+///     This class creates hotkeys to automate common tasks in Outlook
 /// </summary>
 internal class OutlookRuleFactory : BaseRuleFactory
 {
+    /// <summary>
+    ///     Array of control names used in Outlook for editing text.
+    /// </summary>
+    private static readonly string[] ControlNames = { "_WwG", "RICHEDIT60W", "RichEdit20WPT" };
+
     public override List<BaseRuleRecord> Create()
     {
-
-        return new List<BaseRuleRecord>()
+        return new List<BaseRuleRecord>
         {
-            new HotKeyRuleRecord("1", () => SetImportanceOutlook(Outlook.OlImportance.olImportanceLow), OutlookCheckNotEditor),
-            new HotKeyRuleRecord("2", () => SetImportanceOutlook(Outlook.OlImportance.olImportanceNormal), OutlookCheckNotEditor),
-            new HotKeyRuleRecord("3", () => SetImportanceOutlook(Outlook.OlImportance.olImportanceHigh), OutlookCheckNotEditor),
+            new HotKeyRuleRecord("1", () => SetImportanceOutlook(OlImportance.olImportanceLow), OutlookCheckNotEditor),
+            new HotKeyRuleRecord("2", () => SetImportanceOutlook(OlImportance.olImportanceNormal),
+                OutlookCheckNotEditor),
+            new HotKeyRuleRecord("3", () => SetImportanceOutlook(OlImportance.olImportanceHigh), OutlookCheckNotEditor),
 
-            new HotStringRuleRecord("дд", GetGreeting, checkWindowCondition: OutlookCheckEditor ),
+            new HotStringRuleRecord("дд", GetGreeting, checkWindowCondition: OutlookCheckEditor),
 
             new VimKeyRuleRecord("c", SearchBySubject, OutlookCheckNotEditor),
             new VimKeyRuleRecord("a", SearchBySender, OutlookCheckNotEditor),
             new VimKeyRuleRecord("t", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkToday);
+                MarkOutlookItems(OlMarkInterval.olMarkToday);
                 RemoveWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("tt", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkTomorrow);
+                MarkOutlookItems(OlMarkInterval.olMarkTomorrow);
                 RemoveWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("tw", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkThisWeek);
+                MarkOutlookItems(OlMarkInterval.olMarkThisWeek);
                 RemoveWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("tm", () =>
@@ -46,17 +50,17 @@ internal class OutlookRuleFactory : BaseRuleFactory
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("tww", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkNextWeek);
+                MarkOutlookItems(OlMarkInterval.olMarkNextWeek);
                 RemoveWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("w", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkToday);
+                MarkOutlookItems(OlMarkInterval.olMarkToday);
                 SetWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("wt", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkTomorrow);
+                MarkOutlookItems(OlMarkInterval.olMarkTomorrow);
                 SetWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("wm", () =>
@@ -66,33 +70,38 @@ internal class OutlookRuleFactory : BaseRuleFactory
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("ww", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkThisWeek);
+                MarkOutlookItems(OlMarkInterval.olMarkThisWeek);
                 SetWaitCategory();
             }, OutlookCheckNotEditor),
             new VimKeyRuleRecord("www", () =>
             {
-                MarkOutlookItems(Outlook.OlMarkInterval.olMarkNextWeek);
+                MarkOutlookItems(OlMarkInterval.olMarkNextWeek);
                 SetWaitCategory();
             }, OutlookCheckNotEditor),
-            new VimKeyRuleRecord("d", () => MarkOutlookItems(Outlook.OlMarkInterval.olMarkComplete), OutlookCheckNotEditor),
+            new VimKeyRuleRecord("d", () => MarkOutlookItems(OlMarkInterval.olMarkComplete), OutlookCheckNotEditor),
             new VimKeyRuleRecord("r", "{CONTROL DOWN}{KEY_R DOWN}{KEY_R UP}{CONTROL UP}", OutlookCheckNotEditor),
-            new VimKeyRuleRecord("rr", "{CONTROL DOWN}{SHIFT DOWN}{KEY_R DOWN}{KEY_R UP}{SHIFT UP}{CONTROL UP}", OutlookCheckNotEditor),
+            new VimKeyRuleRecord("rr", "{CONTROL DOWN}{SHIFT DOWN}{KEY_R DOWN}{KEY_R UP}{SHIFT UP}{CONTROL UP}",
+                OutlookCheckNotEditor),
             new VimKeyRuleRecord("f", "{CONTROL DOWN}{KEY_F DOWN}{KEY_F UP}{CONTROL UP}", OutlookCheckNotEditor),
-            new VimKeyRuleRecord("ff", "{CONTROL DOWN}{SHIFT DOWN}{KEY_F DOWN}{KEY_F UP}{SHIFT UP}{CONTROL UP}", OutlookCheckNotEditor),
+            new VimKeyRuleRecord("ff", "{CONTROL DOWN}{SHIFT DOWN}{KEY_F DOWN}{KEY_F UP}{SHIFT UP}{CONTROL UP}",
+                OutlookCheckNotEditor),
             new VimKeyRuleRecord("j", "{DOWN}", OutlookCheckNotEditor),
             new VimKeyRuleRecord("k", "{UP}", OutlookCheckNotEditor),
             new VimKeyRuleRecord("gg", "{HOME}", OutlookCheckNotEditor),
             new VimKeyRuleRecord("G", "{END}", OutlookCheckNotEditor),
-            new VimKeyRuleRecord("o", "{CONTROL DOWN}{KEY_O DOWN}{KEY_O UP}{CONTROL UP}", OutlookCheckNotEditor),
-
+            new VimKeyRuleRecord("o", "{CONTROL DOWN}{KEY_O DOWN}{KEY_O UP}{CONTROL UP}", OutlookCheckNotEditor)
         };
-
     }
-    private static void MarkOutlookItems(Outlook.OlMarkInterval interval)
+
+    /// <summary>
+    ///     Set interval for selected items
+    /// </summary>
+    /// <param name="interval">Interval of items</param>
+    private static void MarkOutlookItems(OlMarkInterval interval)
     {
         Task.Run(() =>
         {
-            foreach (OutlookItem item in OutlookApplication.GetSelectedItems())
+            foreach (var item in OutlookApplication.GetSelectedItems())
             {
                 (item as ITaskItem)?.MarkInterval(interval);
                 item.Save();
@@ -100,14 +109,17 @@ internal class OutlookRuleFactory : BaseRuleFactory
         });
     }
 
+    /// <summary>
+    ///     Update the due date of selected items in Outlook to the upcoming Monday.
+    /// </summary>
     private static void SetToNextMonday()
     {
         Task.Run(() =>
         {
-            foreach (OutlookItem item in OutlookApplication.GetSelectedItems())
+            foreach (var item in OutlookApplication.GetSelectedItems())
             {
-                DateTime today = DateTime.Today.AddDays(1);
-                int daysUntilMonday = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
+                var today = DateTime.Today.AddDays(1);
+                var daysUntilMonday = ((int)DayOfWeek.Monday - (int)today.DayOfWeek + 7) % 7;
                 var nextMonday = today.AddDays(daysUntilMonday);
                 if (item is ITaskItem i)
                 {
@@ -117,27 +129,32 @@ internal class OutlookRuleFactory : BaseRuleFactory
             }
         });
     }
+
     /// <summary>
-    /// Задать категорию "Wait" для выделенных элементов
+    ///     Set the category of the selected Outlook items to "Wait".
     /// </summary>
     private static void SetWaitCategory()
     {
         Task.Run(() =>
         {
-            string category = "Wait";
-            foreach (OutlookItem item in OutlookApplication.GetSelectedItems())
+            var category = "Wait";
+            foreach (var item in OutlookApplication.GetSelectedItems())
             {
                 item.AddCategory(category);
                 item.Save();
             }
         });
     }
+
+    /// <summary>
+    ///     Remove "Wait" category from the selected Outlook items
+    /// </summary>
     private static void RemoveWaitCategory()
     {
         Task.Run(() =>
         {
-            string category = "Wait";
-            foreach (OutlookItem item in OutlookApplication.GetSelectedItems())
+            var category = "Wait";
+            foreach (var item in OutlookApplication.GetSelectedItems())
             {
                 item.RemoveCategory(category);
                 item.Save();
@@ -145,28 +162,43 @@ internal class OutlookRuleFactory : BaseRuleFactory
         });
     }
 
-    private static readonly string[] ControlNames = new string[] { "_WwG", "RICHEDIT60W", "RichEdit20WPT" };
-    public static bool OutlookCheckNotEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
+    /// <summary>
+    ///     Check if the current window is Outlook and the current control is not the editor.
+    /// </summary>
+    /// <param name="windowTitle">Title of the foreground window</param>
+    /// <param name="windowClass">Class of the foreground window</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window</param>
+    /// <param name="windowControl">Name of the focused control</param>
+    /// <returns>True if the current window is Outlook and the current control is not the editor, otherwise false</returns>
+    public static bool OutlookCheckNotEditor(string? windowTitle, string? windowClass, string? windowModule,
+        string? windowControl)
     {
-        return windowClass == "rctrl_renwnd32" && controlClassName is not null && !ControlNames.Contains(controlClassName);
+        return windowClass == "rctrl_renwnd32" && windowControl is not null && !ControlNames.Contains(windowControl);
     }
 
-    public static bool OutlookCheckEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
+    /// <summary>
+    ///     Check if the current window is Outlook and the current control is the editor.
+    /// </summary>
+    /// <param name="windowTitle">Title of the foreground window</param>
+    /// <param name="windowClass">Class of the foreground window</param>
+    /// <param name="windowModule">Module name (file *.exe) of the foreground window</param>
+    /// <param name="windowControl">Name of the focused control</param>
+    /// <returns>True if the current window is Outlook and the current control is not the editor, otherwise false</returns>
+    public static bool OutlookCheckEditor(string? windowTitle, string? windowClass, string? windowModule,
+        string? windowControl)
     {
-        return windowClass == "rctrl_renwnd32" && controlClassName is not null && ControlNames.Contains(controlClassName);
+        return windowClass == "rctrl_renwnd32" && windowControl is not null && ControlNames.Contains(windowControl);
     }
 
-    public static bool NotInOutlookEditor(string? windowTitle, string? windowClass, string? windowModuleName, string? controlClassName)
-    {
-        return windowClass != "rctrl_renwnd32" || OutlookCheckNotEditor(windowTitle, windowClass, windowModuleName, controlClassName);
-
-    }
-
-    private static void SetImportanceOutlook(Outlook.OlImportance importance)
+    /// <summary>
+    ///     Set the importance of the selected Outlook items.
+    /// </summary>
+    /// <param name="importance">Importance of selected items</param>
+    private static void SetImportanceOutlook(OlImportance importance)
     {
         Task.Run(() =>
         {
-            foreach (OutlookItem item in OutlookApplication.GetSelectedItems())
+            foreach (var item in OutlookApplication.GetSelectedItems())
             {
                 item.Importance = importance;
                 item.Save();
@@ -174,6 +206,9 @@ internal class OutlookRuleFactory : BaseRuleFactory
         });
     }
 
+    /// <summary>
+    ///     Set the filter of the selected Outlook items by subject.
+    /// </summary>
     private static void SearchBySubject()
     {
         Task.Run(() =>
@@ -183,6 +218,9 @@ internal class OutlookRuleFactory : BaseRuleFactory
         });
     }
 
+    /// <summary>
+    ///     Set the filter of the selected Outlook items by sender.
+    /// </summary>
     private static void SearchBySender()
     {
         Task.Run(() =>
@@ -191,6 +229,11 @@ internal class OutlookRuleFactory : BaseRuleFactory
                 OutlookApplication.Search($"откого:({item.SenderName})");
         });
     }
+
+    /// <summary>
+    ///     Get greeting text including the name of the recipient.
+    /// </summary>
+    /// <returns>Greeting text</returns>
     private static string GetGreeting()
     {
         return Task.Run(() =>
@@ -200,6 +243,7 @@ internal class OutlookRuleFactory : BaseRuleFactory
                 var name = item.Split(' ');
                 return $"Добрый день, {name[1]} {name[2]}!";
             }
+
             return "Добрый день!";
         }).Result;
     }

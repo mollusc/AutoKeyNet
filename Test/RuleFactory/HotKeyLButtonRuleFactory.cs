@@ -1,29 +1,39 @@
-﻿using System.Diagnostics;
-using AutoKeyNet.WindowsHooks.Rule;
+﻿using AutoKeyNet.WindowsHooks.Rule;
 
 namespace AutoKeyNetApp.RuleFactory;
 
 /// <summary>
-/// Создание комбинаций с левой клавишей мыши
+///     Create rules with left key of mouse
 /// </summary>
 internal class HotKeyLButtonRuleFactory : BaseRuleFactory
 {
     public override List<BaseRuleRecord> Create()
     {
-        var rules = new List<BaseRuleRecord>()
+        var rules = new List<BaseRuleRecord>
         {
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_C DOWN}", "{CONTROL DOWN}{KEY_C DOWN}{KEY_C UP}{CONTROL UP}"), // Копирование текста
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_V DOWN}", "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}"), // Вставка текста
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_B DOWN}", PasteWithoutFormat), // Удаление форматирования текста в буфере и вставка текста
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_X DOWN}", "{CONTROL DOWN}{KEY_X DOWN}{KEY_X UP}{CONTROL UP}"), // Вырезать текст
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_F DOWN}", "{CONTROL DOWN}{KEY_B DOWN}{KEY_B UP}{CONTROL UP}"), // Сделать текст жирным
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_D DOWN}", "{CONTROL DOWN}{KEY_I DOWN}{KEY_I UP}{CONTROL UP}"), // Сделать текст курсивом
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_G DOWN}", "{CONTROL DOWN}{KEY_U DOWN}{KEY_U UP}{CONTROL UP}"), // Сделать текст подчеркнутым
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_C DOWN}",
+                "{CONTROL DOWN}{KEY_C DOWN}{KEY_C UP}{CONTROL UP}"), // Copy
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_V DOWN}",
+                "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}"), // Insert
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_B DOWN}",
+                GetTextFromClipboardWithoutFormat), // Insert text without formatting
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_X DOWN}",
+                "{CONTROL DOWN}{KEY_X DOWN}{KEY_X UP}{CONTROL UP}"), // Cut
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_F DOWN}",
+                "{CONTROL DOWN}{KEY_B DOWN}{KEY_B UP}{CONTROL UP}"), // Set text as bold
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_D DOWN}",
+                "{CONTROL DOWN}{KEY_I DOWN}{KEY_I UP}{CONTROL UP}"), // Set text as italic
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_G DOWN}",
+                "{CONTROL DOWN}{KEY_U DOWN}{KEY_U UP}{CONTROL UP}") // Set text as underscore
         };
         return rules;
     }
 
-    private static string PasteWithoutFormat()
+    /// <summary>
+    ///     Retrieve plain text from the clipboard
+    /// </summary>
+    /// <returns>Plain text from clipboard</returns>
+    private static string GetTextFromClipboardWithoutFormat()
     {
         return Clipboard.GetText(TextDataFormat.UnicodeText);
     }
