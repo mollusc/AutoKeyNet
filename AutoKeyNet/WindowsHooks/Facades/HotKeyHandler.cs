@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
 using System.Runtime.InteropServices;
@@ -44,7 +45,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     private readonly HashSet<ushort> _buffer = new();
 
     private readonly HashSet<ushort> _prefixKeysToSuppressKeyBehaviorInHotKey = new();
-    private bool _prefixKeyDown = false;
+    //private bool _prefixKeyDown = false;
 
     private readonly MouseHook _mouseHook;
     private readonly KeyboardHook _keyboardHook;
@@ -96,7 +97,6 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             e.Cancel = ProcessKeyUp((ushort)vkUp);
     }
 
-    private bool _ruleTriggered = false;
     /// <summary>
     /// Method for handling keyboard events
     /// </summary>
@@ -116,31 +116,24 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     }
 
 
+    //private bool _ruleTriggered = false;
+    private HashSet<ushort> _pressedKeys = new();
     private bool ProcessKeyDown(ushort vk, string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
-        if (vk == (ushort)VirtualKey.ESCAPE) // Panic button
-        {
-            _buffer.Clear();
-            _ruleTriggered = false;
-            return false;
-        }
+        _pressedKeys.Clear();
 
         _buffer.Add(vk);
         Debug.WriteLine($"HotKey {(Keys)vk} --> {string.Join(',', _buffer.Select(k => (Keys)k))}");
         if (_buffer.Count == 1 && _prefixKeysToSuppressKeyBehaviorInHotKey.Contains(vk))
         {
             Debug.WriteLine($"      DEBUG: Suppress key down: {(Keys)vk}");
-
-            _prefixKeyDown = true;
             return true;
         }
-        _prefixKeyDown = false;
 
         if (CheckRules(windowTitle, windowClass, windowModule, windowControl))
         {
             Debug.WriteLine($"      DEBUG: Suppress by check rules key down: {(Keys)vk}");
-
-            _ruleTriggered = true;
+            _pressedKeys = new HashSet<ushort>(_buffer);
             return true;
         }
         return false;
@@ -148,30 +141,28 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
 
     private bool ProcessKeyUp(ushort vk)
     {
-        Debug.WriteLine($"Before remove key {(Keys)vk} from buffer {string.Join(',', _buffer.Select(k => (Keys)k))}");
+        Debug.WriteLine($"      DEBUG: Remove key '{(Keys)vk}' from buffer '{string.Join(',', _buffer.Select(k => (Keys)k))}'");
         _buffer.Remove(vk);
 
-        if (_prefixKeyDown && _buffer.Count == 0 && _prefixKeysToSuppressKeyBehaviorInHotKey.Contains(vk))
+        if (_pressedKeys.Count > 0)
         {
-            Debug.WriteLine($"      DEBUG: Regenerate key down: {(Keys)vk}");
+            Debug.WriteLine($"      DEBUG: Suppress key '{(Keys)vk}' and remove from _pressedKeys: '{string.Join(',', _pressedKeys.Select(k => (Keys)k))}'");
+
+            _pressedKeys.Remove(vk);
+            return true;
+        }
+
+        if (_buffer.Count == 0 && _prefixKeysToSuppressKeyBehaviorInHotKey.Contains(vk))
+        {
+            Debug.WriteLine($"      DEBUG: Regenerate press key: {(Keys)vk}");
 
             VirtualKey virtualKey = (VirtualKey)vk;
             var inputs = virtualKey.ToInputsPressKey().ToArray();
             NativeMethods.SendInputAsync(inputs).ConfigureAwait(false);
-            _prefixKeyDown = false;
             return true;
         }
-        _prefixKeyDown = false;
-
-        if (_ruleTriggered)
-        {
-            Debug.WriteLine($"      DEBUG: Suppress by ruleTriggered key up: {(Keys)vk}");
-
-            if (_buffer.Count == 0)
-                _ruleTriggered = false;
-            return true;
-        }
-
+        Debug.WriteLine($"      DEBUG: Clear buffer:'{string.Join(',', _buffer.Select(k => (Keys)k))}' ");
+        _buffer.Clear();
         return false;
     }
 

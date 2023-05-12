@@ -10,10 +10,18 @@ namespace AutoKeyNet.WindowsHooks.WinApi
 {
     public static class NativeMethods
     {
-        public static async Task SendInputAsync(Input[] inputs) => await Task.Run(() => SendInput(inputs));
+        public static Task SendInputAsync(Input[] inputs) => Task.Run(() => SendInput(inputs));
         public static void SendInput(Input[] inputs) => SendInput((uint)inputs.Length, inputs, Input.Size);
 
         [DllImport("user32.dll", SetLastError = true)]
         public static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
+
+        [DllImport("user32.dll")]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public const int SW_MAXIMIZE = 3;
     }
 }

@@ -110,7 +110,7 @@ internal class HotStringHandler : BaseKeyHandler, IDisposable
             if (char.IsLetterOrDigit(e.Letter))
             {
                 _buffer += e.Letter;
-                Debug.WriteLine($"HotString {e.Letter} --> {_buffer}");
+                //Debug.WriteLine($"HotString {e.Letter} --> {_buffer}");
             }
         }
 

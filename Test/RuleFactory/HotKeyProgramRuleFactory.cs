@@ -1,6 +1,9 @@
 ﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Rule;
+using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -14,21 +17,30 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
         return new List<BaseRuleRecord>()
         {
 
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_X DOWN}", () => RunProgram("iexplore.exe", "C:\\Program Files\\Internet Explorer\\iexplore.exe"),null, HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey),
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_E DOWN}", () => RunProgram("EXCEL.EXE", "c:\\Program Files\\Microsoft Office\\Office15\\EXCEL.EXE")),
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_W DOWN}",
-                () => RunProgram("WINWORD.EXE", "c:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE")),
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_T DOWN}",
-                () => RunProgram("TOTALCMD64.EXE", "C:\\Program Files (x86)\\Total Commander\\TOTALCMD64.EXE"),null, HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey),
-            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_S DOWN}",
-                () => RunProgram("OUTLOOK.EXE", "C:\\Program Files\\Microsoft Office\\Office15\\OUTLOOK.EXE")),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_X DOWN}", () => RunProgram("iexplore", "C:\\Program Files\\Internet Explorer\\iexplore.exe"),null, HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_E DOWN}", () => RunProgram("EXCEL", "c:\\Program Files\\Microsoft Office\\Office15\\EXCEL.EXE")),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_W DOWN}", () => RunProgram("WINWORD", "c:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE")),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_T DOWN}", () => RunProgram("TOTALCMD64", "C:\\Program Files (x86)\\Total Commander\\TOTALCMD64.EXE"),null, HotKeyRuleRecordOptionFlags.DelayKeyDownToKyeUpForPrefixKey),
+            new HotKeyRuleRecord("{XBUTTON1 DOWN}{KEY_S DOWN}", () => RunProgram("OUTLOOK", "C:\\Program Files\\Microsoft Office\\Office15\\OUTLOOK.EXE")),
         };
     }
+
     private static void RunProgram(string processName, string pathToProgram)
     {
-        var runningProcessByName = Process.GetProcessesByName(processName);
-        if (runningProcessByName.Length == 0)
+        bool result = false;
+        var processes = Process.GetProcessesByName(processName);
+        var process = processes.FirstOrDefault();
+        if (process is not null) 
         {
+            Debug.WriteLine($"    DEBUG: Set as foreground:'{process.ProcessName}'");
+
+            result |= NativeMethods.ShowWindow(process.MainWindowHandle, NativeMethods.SW_MAXIMIZE);
+            result |= NativeMethods.SetForegroundWindow(process.MainWindowHandle);
+        }
+
+        if (processes.Length == 0 || !result)
+        {
+            Debug.WriteLine($"    DEBUG: Start program:'{pathToProgram}'");
             Process.Start(pathToProgram);
         }
     }
