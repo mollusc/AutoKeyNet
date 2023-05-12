@@ -53,7 +53,7 @@ internal static class StringExtension
                 else
                     keyName = key[1..^1];
 
-                if (VkDictionary.ContainsKey(keyName.ToString()))
+                if (VkDictionary.ContainsKey(keyName))
                 {
                     if (keyAction.IsEmpty || !ActionFlagDictionary.ContainsKey(keyAction.ToString()))
                         foreach (Input input in VkDictionary[keyName.ToString()].ToInputsPressKey())
