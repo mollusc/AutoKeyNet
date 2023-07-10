@@ -15,8 +15,7 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
                 "{CONTROL DOWN}{KEY_C DOWN}{KEY_C UP}{CONTROL UP}"), // Copy
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_V DOWN}",
                 "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}"), // Insert
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_B DOWN}",
-                GetTextFromClipboardWithoutFormat), // Insert text without formatting
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_B DOWN}", PasteWithoutFormat()), // Insert text without formatting
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_X DOWN}",
                 "{CONTROL DOWN}{KEY_X DOWN}{KEY_X UP}{CONTROL UP}"), // Cut
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_F DOWN}",
@@ -28,6 +27,22 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
         };
         return rules;
     }
+
+
+
+    /// <summary>
+    /// Paste text from clapboard without format
+    /// </summary>
+    /// <returns></returns>
+    private Func<string> PasteWithoutFormat()
+    {
+        return () =>
+        {
+            Clipboard.SetText(GetTextFromClipboardWithoutFormat());
+            return "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}";
+        };
+    }
+
 
     /// <summary>
     ///     Retrieve plain text from the clipboard

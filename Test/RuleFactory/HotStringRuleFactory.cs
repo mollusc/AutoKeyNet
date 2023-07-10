@@ -39,9 +39,9 @@ internal class HotStringRuleFactory : BaseRuleFactory
             new HotStringRuleRecord("зз", "→", false),
             new HotStringRuleRecord("ыа", "откого:(){Left}", false),
             new HotStringRuleRecord("ые", "имяполучателя:(){Left}", false),
-            new HotStringRuleRecord("htd",
-                () => DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")), // Insert the current date and time
-            new HotStringRuleRecord("hd", () => DateTime.Now.ToString("yyyy-MM-dd")) // Insert the current date
+            new HotStringRuleRecord("htd", () => DateTime.Now.ToString("yyyy-MM-dd HH-mm-ss")), // Insert the current date and time
+            new HotStringRuleRecord("hd", () => DateTime.Now.ToString("yyyy-MM-dd")), // Insert the current date
+            new HotStringRuleRecord("hg", () => DateTime.Now.ToString("d")) // Insert the current date
         };
         rules.AddRange(GetNameRulesFromConfiguration());
         rules.AddRange(GetHotStringRulesFromConfiguration());
