@@ -40,7 +40,8 @@ internal static class Program
             new HotStringRuleFactory(),
             new HotKeyLButtonRuleFactory(),
             new HotKeyProgramRuleFactory(),
-            new OutlookRuleFactory()
+            new OutlookRuleFactory(),
+            new ShiftRule()
         };
 
         foreach (var ruleFactory in ruleFactories)

@@ -1,4 +1,6 @@
-﻿using AutoKeyNet.WindowsHooks.Rule;
+﻿using System.Globalization;
+using System.Runtime.InteropServices;
+using AutoKeyNet.WindowsHooks.Rule;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -22,11 +24,11 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
                 "{CONTROL DOWN}{KEY_B DOWN}{KEY_B UP}{CONTROL UP}"), // Set text as bold
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_D DOWN}",
                 "{CONTROL DOWN}{KEY_I DOWN}{KEY_I UP}{CONTROL UP}"), // Set text as italic
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_G DOWN}",
-                "{CONTROL DOWN}{KEY_U DOWN}{KEY_U UP}{CONTROL UP}") // Set text as underscore
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_G DOWN}", "{CONTROL DOWN}{KEY_U DOWN}{KEY_U UP}{CONTROL UP}"), // Set text as underscore
         };
         return rules;
     }
+
 
 
 
@@ -52,4 +54,5 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
     {
         return Clipboard.GetText(TextDataFormat.UnicodeText);
     }
+
 }

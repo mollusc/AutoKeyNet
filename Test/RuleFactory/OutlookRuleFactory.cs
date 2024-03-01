@@ -238,10 +238,17 @@ internal class OutlookRuleFactory : BaseRuleFactory
     {
         return Task.Run(() =>
         {
-            if (OutlookApplication.GetRecipientCurrentWindow() is { } item)
+            try
             {
-                var name = item.Split(' ');
-                return $"Добрый день, {name[1]} {name[2]}!";
+                if (OutlookApplication.GetRecipientCurrentWindow() is { } item)
+                {
+                    var name = item.Split(' ');
+                    return $"Добрый день, {name[1]} {name[2]}!";
+                }
+            }
+            catch
+            {
+                // ignored
             }
 
             return "Добрый день!";
