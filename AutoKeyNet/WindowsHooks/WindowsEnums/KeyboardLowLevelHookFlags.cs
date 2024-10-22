@@ -4,7 +4,7 @@
 ///     Specifies the flags that can be used with the low-level keyboard input event hook.
 /// </summary>
 [Flags]
-internal enum KeyboardLowLevelHookFlags : uint
+public enum KeyboardLowLevelHookFlags : uint
 {
     /// <summary>
     ///     Specifies if the key is an extended key.
