@@ -41,7 +41,6 @@ internal static class Program
             new HotKeyLButtonRuleFactory(),
             new HotKeyProgramRuleFactory(),
             new OutlookRuleFactory(),
-            new ShiftRule()
         };
 
         foreach (var ruleFactory in ruleFactories)
