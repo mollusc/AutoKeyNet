@@ -8,7 +8,7 @@ namespace AutoKeyNet.WindowsHooks.Facades;
 /// </summary>
 public class AutoKeyNetFacade : IDisposable
 {
-    private readonly HotKeyHandler _hotKeyHandler;
+    private readonly NewHotKeyHandler _hotKeyHandler;
     private readonly HotStringHandler _hotStringHandler;
     private readonly KeyboardHook _kbdHook;
     private readonly MouseHook _mouseHook;
@@ -27,7 +27,7 @@ public class AutoKeyNetFacade : IDisposable
         _kbdHook = new KeyboardHook();
 
         var baseRuleRecords = rules as BaseRuleRecord[] ?? rules.ToArray();
-        _hotKeyHandler = new HotKeyHandler(baseRuleRecords, _kbdHook, _mouseHook);
+        _hotKeyHandler = new NewHotKeyHandler(baseRuleRecords, _kbdHook, _mouseHook);
         _hotStringHandler = new HotStringHandler(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
         _vimKeyHandler = new VimKeyHandler(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
     }

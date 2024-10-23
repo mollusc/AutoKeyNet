@@ -91,7 +91,7 @@ namespace AutoKeyNetApp.RuleFactory
             {
                 _isShiftDown = true;
                 Debug.WriteLine("_isShiftDown = true;");
-                _timer = new Timer(tm, _isShiftDown, 1, 0);
+                _timer = new Timer(tm, _isShiftDown, 200, 0);
             };
         }
 
