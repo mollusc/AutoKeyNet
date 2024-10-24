@@ -15,9 +15,7 @@ namespace AutoKeyNet.WindowsHooks.Facades;
 /// </summary>
 internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
 {
-    /// <summary>
-    ///     Dictionary of Windows mouse events and virtual keys, used for adding virtual mouse keys to the buffer.
-    /// </summary>
+    private const int BufferSize = 1000;
     private readonly Dictionary<(MouseMessage, uint), VirtualKey> _activateMouseKeyEvent = new()
     {
         { (MouseMessage.WM_LBUTTONDOWN, 0), VirtualKey.LBUTTON },
@@ -27,10 +25,7 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
         { (MouseMessage.WM_XBUTTONDOWN, XBUTTON2), VirtualKey.XBUTTON2 }
     };
 
-    /// <summary>
-    ///     Buffer for pressed keys
-    /// </summary>
-    private readonly HashSet<Input> _buffer = new(new InputComparerFlagIgnore());
+    private readonly Buffer<Input> _buffer = new(BufferSize);
 
 
     /// <summary>
@@ -73,11 +68,10 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="mouseHook">Mouse hook</param>
     public NewHotKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
     {
-        //_mouseHook = mouseHook;
-        //_mouseHook.OnHookEvent += OnMouseHookEvent;
+        _mouseHook = mouseHook;
+        _mouseHook.OnHookEvent += OnMouseHookEvent;
         _keyboardHook = kbdHook;
         _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
-        InitializePrefixKeys();
     }
 
     /// <summary>
@@ -85,20 +79,8 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
     /// </summary>
     public void Dispose()
     {
-        //_mouseHook.OnHookEvent -= OnMouseHookEvent;
+        _mouseHook.OnHookEvent -= OnMouseHookEvent;
         _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
-    }
-
-    /// <summary>
-    ///     Initialize a list of prefix keys.
-    /// </summary>
-    private void InitializePrefixKeys()
-    {
-        foreach (var rule in Rules)
-            if (rule is HotKeyRuleRecord hotKeyRule
-                && hotKeyRule.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehaviorForPrefixKey))
-                if (hotKeyRule.KeyInputs.ToVirtualKeys().FirstOrDefault() is var virtualKey)
-                    _prefixKeys.Add((ushort)virtualKey);
     }
 
 
@@ -115,54 +97,47 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
         var input = kbd.VirtualKey.ToInput(keyFlag);
         e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
     }
+    private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
+    {
+        Input input = new Input
+        {
+            Type = InputType.INPUT_KEYBOARD
+        };
+        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkDown))
+        {
+            input.Data.KeyboardInput.VirtualKey = (ushort)vkDown;
+            input.Data.KeyboardInput.Flags = KeyEventFlags.KEYDOWN;
+            e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+        }
+
+        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkUp))
+        {
+            input.Data.KeyboardInput.VirtualKey = (ushort)vkUp;
+            input.Data.KeyboardInput.Flags = KeyEventFlags.KEYUP;
+            e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+        }
+    }
 
     private bool ProcessKey(Input input, string? eWindowTitle, string? eWindowClass, string? eWindowModule, string? eWindowControl)
     {
-        if (input.Data.KeyboardInput.Flags == KeyEventFlags.KEYUP)
-            _buffer.Remove(input);
         _buffer.Add(input);
-        Debug.WriteLine(_buffer.Count);
-        bool result = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl);
-        if (input.Data.KeyboardInput.Flags == KeyEventFlags.KEYUP)
-            _buffer.Remove(input);
-        return result;
+        Debug.WriteLine(string.Join(" ", _buffer.TakeLast(5).Select(b => $"[{b}]")));
+        return CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl);
     }
 
 
-
-    /// <summary>
-    ///     Method for checking rules
-    /// </summary>
-    /// <param name="windowTitle">
-    ///     Title of the foreground window for filtering rules. If the variable is null, the filter is
-    ///     not applied.
-    /// </param>
-    /// <param name="windowClass">
-    ///     Class of the foreground window for filtering rules. If the variable is null, the filter is
-    ///     not applied.
-    /// </param>
-    /// <param name="windowModule">
-    ///     Module name (file *.exe) of the foreground window for filtering rules. If the variable is
-    ///     null, the filter is not applied.
-    /// </param>
-    /// <param name="windowControl">
-    ///     Name of the focused control for filtering rules. If the variable is null, the filter is not
-    ///     applied.
-    /// </param>
-    /// <returns>True if a rule was triggered; otherwise, false.</returns>
     private bool CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
-        var testBuffer = new HashSet<Input>(_buffer, new InputComparerByVKeyAndFlag());
         var result = false;
-        if (testBuffer.Count > 0)
+        if (_buffer.Count > 0)
             foreach (var rule in Rules)
-                if (rule is HotKeyRuleRecord
-                    && testBuffer.SetEquals(rule.KeyInputs)
+                if (rule is HotKeyRuleRecord hotKeyRule
+                    && _buffer.TakeLast(rule.KeyInputs.Length).SequenceEqual(rule.KeyInputs, new InputComparerByVKeyAndFlag())
                     && (rule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                         true))
                 {
                     rule.Run.Invoke();
-                    result = true;
+                    result = hotKeyRule.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior);
                 }
 
         return result;

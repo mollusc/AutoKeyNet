@@ -20,7 +20,7 @@ internal static class InputExtension
     /// <param name="input">Input to convert</param>
     /// <returns>A virtual key</returns>
     public static VirtualKey ToVirtualKey(this Input input) =>
-        input.Data.KeyboardInput.VirtualKey != 0 ? (VirtualKey)input.Data.KeyboardInput.VirtualKey : input.Data.MouseInput.ToVirtualKey();
+        input.Type == InputType.INPUT_KEYBOARD ? (VirtualKey)input.Data.KeyboardInput.VirtualKey : input.Data.MouseInput.ToVirtualKey();
 
     /// <summary>
     ///     Converts mouse input to a virtual key.

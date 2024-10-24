@@ -8,7 +8,7 @@ namespace AutoKeyNet.WindowsHooks.Helper;
 /// <summary>
 ///     Extension methods for virtual keys
 /// </summary>
-internal static class VirtualKeyExtension
+public static class VirtualKeyExtension
 {
     /// <summary>
     ///     Method for converting a virtual key to an Input structure with a key down event
@@ -17,7 +17,7 @@ internal static class VirtualKeyExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>An Input structure that represents the virtual key</returns>
-    internal static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
+    public static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
         nuint extraInfo = KEY_IGNORE) => virtualKey switch
     {
         VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),
@@ -64,7 +64,7 @@ internal static class VirtualKeyExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>Input structures that represent the virtual key</returns>
-    internal static IEnumerable<Input> ToInputsPressKey(this VirtualKey virtualKey, KeyEventFlags flags = 0,
+    public static IEnumerable<Input> ToInputsPressKey(this VirtualKey virtualKey, KeyEventFlags flags = 0,
         nuint extraInfo = KEY_IGNORE)
     {
         foreach (var extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
@@ -82,7 +82,7 @@ internal static class VirtualKeyExtension
     ///     account the current language keyboard layout
     /// </param>
     /// <returns>Unicode character</returns>
-    internal static char ToUnicode(this VirtualKey vkCode, bool isInvariantCulture = false)
+    public static char ToUnicode(this VirtualKey vkCode, bool isInvariantCulture = false)
     {
         var sbString = new StringBuilder();
 

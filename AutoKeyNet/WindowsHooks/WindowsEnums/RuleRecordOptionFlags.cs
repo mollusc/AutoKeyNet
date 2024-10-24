@@ -10,7 +10,8 @@ public enum HotKeyRuleRecordOptionFlags
 
     /// <summary>
     ///     Suppress the prefix key down event until the event key up. This is necessary to suppress the native behavior of the
-    ///     prefix key, when the prefix key is used in a hotkey combination as the first key).
+    ///     prefix key, when the prefix key is used in a hotkey combination as the first key.
     /// </summary>
-    SuppressNativeBehaviorForPrefixKey = 1 << 0
+    SuppressNativeBehaviorForPrefixKey = 1 << 0,
+    SuppressNativeBehavior = 1 << 1,
 }
