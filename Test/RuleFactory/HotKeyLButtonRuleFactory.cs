@@ -1,4 +1,5 @@
 ﻿using AutoKeyNet.WindowsHooks.Rule;
+using AutoKeyNet.WindowsHooks.WindowsEnums;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -11,19 +12,20 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
     {
         var rules = new List<BaseRuleRecord>
         {
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_C DOWN}",
-                "{CONTROL DOWN}{KEY_C DOWN}{KEY_C UP}{CONTROL UP}"), // Copy
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_C DOWN}{KEY_C UP}{LBUTTON UP}",
+                "{CONTROL DOWN}{KEY_C DOWN}{KEY_C UP}{CONTROL UP}",
+                option:HotKeyRuleRecordOptionFlags.SuppressNativeBehavior|HotKeyRuleRecordOptionFlags.SuppressNativeBehaviorForPrefixKey), // Copy
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_V DOWN}",
-                "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}"), // Insert
+                "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}", option:HotKeyRuleRecordOptionFlags.SuppressNativeBehavior), // Insert
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_B DOWN}", PasteWithoutFormat()), // Insert text without formatting
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_X DOWN}",
-                "{CONTROL DOWN}{KEY_X DOWN}{KEY_X UP}{CONTROL UP}"), // Cut
+                "{CONTROL DOWN}{KEY_X DOWN}{KEY_X UP}{CONTROL UP}", option : HotKeyRuleRecordOptionFlags.SuppressNativeBehavior), // Cut
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_F DOWN}",
-                "{CONTROL DOWN}{KEY_B DOWN}{KEY_B UP}{CONTROL UP}"), // Set text as bold
+                "{CONTROL DOWN}{KEY_B DOWN}{KEY_B UP}{CONTROL UP}", option : HotKeyRuleRecordOptionFlags.SuppressNativeBehavior), // Set text as bold
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_D DOWN}",
-                "{CONTROL DOWN}{KEY_I DOWN}{KEY_I UP}{CONTROL UP}"), // Set text as italic
+                "{CONTROL DOWN}{KEY_I DOWN}{KEY_I UP}{CONTROL UP}", option : HotKeyRuleRecordOptionFlags.SuppressNativeBehavior), // Set text as italic
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_G DOWN}",
-                "{CONTROL DOWN}{KEY_U DOWN}{KEY_U UP}{CONTROL UP}") // Set text as underscore
+                "{CONTROL DOWN}{KEY_U DOWN}{KEY_U UP}{CONTROL UP}", option : HotKeyRuleRecordOptionFlags.SuppressNativeBehavior) // Set text as underscore
         };
         return rules;
     }

@@ -18,7 +18,7 @@ public static class VirtualKeyExtension
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>An Input structure that represents the virtual key</returns>
     public static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
-        nuint extraInfo = KEY_IGNORE) => virtualKey switch
+        nuint extraInfo = KEY_IGNORE) => GetKeyboardInput(virtualKey, flags, extraInfo); /*virtualKey switch
     {
         VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),
         VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.LEFTDOWN.ToInput(),
@@ -32,7 +32,7 @@ public static class VirtualKeyExtension
         VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON2),
 
         _ => GetKeyboardInput(virtualKey, flags, extraInfo)
-    };
+    };*/
 
     /// <summary>
     ///     Converts a virtual key to a keyboard input

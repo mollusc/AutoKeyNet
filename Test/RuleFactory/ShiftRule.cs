@@ -13,11 +13,9 @@ internal class ShiftRule : BaseRuleFactory
     private static readonly string en_US = "00000409";
     private static readonly string ru_RU = "00000419";
     private static readonly uint KLF_ACTIVATE = 1;
-    private static bool _isLShiftDown;
-    private static bool _isRShiftDown;
+    private bool _isShiftDown;
 
-    private Timer _timer;
-    private readonly TimerCallback tm = SetFalse;
+    private Timer? _timer;
 
     [DllImport("user32.dll")]
     private static extern bool PostMessage(int hhwnd, uint msg, IntPtr wparam, IntPtr lparam);
@@ -29,32 +27,30 @@ internal class ShiftRule : BaseRuleFactory
     {
         var rules = new List<BaseRuleRecord>
         {
-            new HotKeyRuleRecord("{LSHIFT DOWN}", ChangeLanguageDown()),
-            new HotKeyRuleRecord("{LSHIFT UP}", ChangeLanguage(en_US)),
+            new HotKeyRuleRecord("{LSHIFT DOWN}", ActivateTimer()),
+            new HotKeyRuleRecord("{LSHIFT UP}", TryChangeLanguage(en_US)),
 
-            new HotKeyRuleRecord("{RSHIFT DOWN}", ChangeLanguageDown()),
-            new HotKeyRuleRecord("{RSHIFT UP}", ChangeLanguage(ru_RU))
+            new HotKeyRuleRecord("{RSHIFT DOWN}", ActivateTimer()),
+            new HotKeyRuleRecord("{RSHIFT UP}", TryChangeLanguage(ru_RU))
         };
         return rules;
     }
 
-    private static void SetFalse(object? state)
+    private void SetFalse(object? state)
     {
         _isShiftDown = false;
-        Debug.WriteLine("_isShiftDown = false;");
     }
 
-    private Action ChangeLanguageDown()
+    private Action ActivateTimer()
     {
         return () =>
         {
             _isShiftDown = true;
-            Debug.WriteLine("_isShiftDown = true;");
-            _timer = new Timer(tm, _isShiftDown, 100, 0);
+            _timer = new Timer(SetFalse, null, 100, 0);
         };
     }
 
-    private static Action ChangeLanguage(string pwszKLID)
+    private Action TryChangeLanguage(string pwszKLID)
     {
         return () =>
         {
@@ -63,8 +59,7 @@ internal class ShiftRule : BaseRuleFactory
                 PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, IntPtr.Zero,
                     LoadKeyboardLayout(pwszKLID, KLF_ACTIVATE));
             }
+            _timer?.Dispose();
         };
     }
-
-    internal delegate nint HookCallbackDelegate(int nCode, nint wParam, nint lParam);
 }
