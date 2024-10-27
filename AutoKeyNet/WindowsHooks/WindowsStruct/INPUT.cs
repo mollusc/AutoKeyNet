@@ -1,4 +1,4 @@
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 
@@ -32,7 +32,14 @@ public struct Input
             case InputType.INPUT_MOUSE:
                 return $"Mouse: {Data.MouseInput.ToVirtualKey()} {Data.MouseInput.Flags}";
             case InputType.INPUT_KEYBOARD:
-                return $"KeyBoard: {(VirtualKey)Data.KeyboardInput.VirtualKey} {Data.KeyboardInput.Flags}";
+                VirtualKey vk = (VirtualKey)Data.KeyboardInput.VirtualKey;
+                string? eventFlag = Data.KeyboardInput.Flags switch
+                {
+                    KeyEventFlags.KEYUP => "↑",
+                    KeyEventFlags.KEYDOWN => "↓",
+                    _ => null
+                };
+                return $"{vk.GetDisplayName() ?? vk.ToString()}{eventFlag}";
             case InputType.INPUT_HARDWARE:
                 return "HardWare: " + Data.HardwareInput.Message;
             default:

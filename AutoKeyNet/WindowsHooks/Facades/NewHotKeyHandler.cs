@@ -6,6 +6,7 @@ using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using Microsoft.VisualStudio.Services.Common;
 using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
@@ -96,12 +97,12 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
                 for (int i = 0; i < rule.KeyInputs.Length; i++)
                 {
                     List<Input> inputs = new List<Input>();
-                    // TODO: нужно проверить что бы не было дублей списков
                     for (int j = 0; j < i; j++)
                     {
                         inputs.Add(rule.KeyInputs[j]);
                     }
-                    _supressedKeys.Add(inputs);
+                    if (_supressedKeys.All(l => !l.SequenceEqual(inputs)) && inputs.Any())
+                        _supressedKeys.Add(inputs);
                 }
             }
     }
@@ -144,19 +145,25 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
     {
         _buffer.Add(input);
         Debug.WriteLine(string.Join(" ", _buffer.TakeLast(5).Select(b => $"[{b}]")));
-        var firedRules = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl).ToList();
-        if(firedRules.Any())
-        {
-            if (_supressedKeys.Any() && !firedRules.Any(r => r.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior)))
-            {
-                SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
-            }
-            _supressedKeys.Clear();
-        }
-        else 
+        var firedRules = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl).ToArray();
         if (_supressedKeys.Any(inputs => _buffer.TakeLast(inputs.Count).SequenceEqual(inputs)))
         {
             _pressedKeys.Add(input);
+        }
+        else if (_pressedKeys.Any())
+        {
+            SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            _pressedKeys.Clear();
+        }
+
+        if (firedRules.Any())
+        {
+            if (_pressedKeys.Any() && !firedRules.Any(r => r.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior)))
+                SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            firedRules.ForEach(r => r.Run.Invoke());
+            Debug.WriteLine("Rule Proceed");
+
+            _pressedKeys.Clear();
         }
         return false;
     }
@@ -171,7 +178,6 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
                     && (rule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                         true))
                 {
-                    rule.Run.Invoke();
                     yield return hotKeyRuleRecord;
                 }
     }

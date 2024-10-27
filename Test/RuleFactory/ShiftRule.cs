@@ -46,7 +46,7 @@ internal class ShiftRule : BaseRuleFactory
         return () =>
         {
             _isShiftDown = true;
-            _timer = new Timer(SetFalse, null, 100, 0);
+            _timer = new Timer(SetFalse, null, 200, 0);
         };
     }
 

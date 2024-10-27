@@ -1,4 +1,6 @@
-﻿namespace AutoKeyNet.WindowsHooks.WindowsEnums;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace AutoKeyNet.WindowsHooks.WindowsEnums;
 
 /// <summary>
 ///     Virtual keys
@@ -8,11 +10,13 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     Left mouse button
     /// </summary>
+    [Display(Name = "LB")]
     LBUTTON = 0x01,
 
     /// <summary>
     ///     Right mouse button
     /// </summary>
+    [Display(Name = "RB")]
     RBUTTON = 0x02,
 
     /// <summary>
@@ -23,16 +27,19 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     Middle mouse button (three-button mouse)
     /// </summary>
+    [Display(Name = "MB")]
     MBUTTON = 0x04,
 
     /// <summary>
     ///     Windows 2000/XP: X1 mouse button
     /// </summary>
+    [Display(Name = "X1")]
     XBUTTON1 = 0x05,
 
     /// <summary>
     ///     Windows 2000/XP: X2 mouse button
     /// </summary>
+    [Display(Name = "X2")]
     XBUTTON2 = 0x06,
 
     /// <summary>
@@ -43,6 +50,7 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     TAB key
     /// </summary>
+    [Display(Name = "↹")]
     TAB = 0x09,
 
     /// <summary>
@@ -53,21 +61,25 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     ENTER key
     /// </summary>
+    [Display(Name = "↲")]
     RETURN = 0x0D,
 
     /// <summary>
     ///     SHIFT key
     /// </summary>
+    [Display(Name = "⇧")]
     SHIFT = 0x10,
 
     /// <summary>
     ///     CTRL key
     /// </summary>
+    [Display(Name = "Ctrl")]
     CONTROL = 0x11,
 
     /// <summary>
     ///     ALT key
     /// </summary>
+    [Display(Name = "Alt")]
     MENU = 0x12,
 
     /// <summary>
@@ -78,6 +90,7 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     CAPS LOCK key
     /// </summary>
+    [Display(Name = "CapsLock")]
     CAPITAL = 0x14,
 
     /// <summary>
@@ -113,6 +126,7 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     ESC key
     /// </summary>
+    [Display(Name = "Esc")]
     ESCAPE = 0x1B,
 
     /// <summary>
@@ -138,6 +152,7 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     SPACEBAR
     /// </summary>
+    [Display(Name = "\u2423")]
     SPACE = 0x20,
 
     /// <summary>
@@ -163,21 +178,25 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     LEFT ARROW key
     /// </summary>
+    [Display(Name = "←")]
     LEFT = 0x25,
 
     /// <summary>
     ///     UP ARROW key
     /// </summary>
+    [Display(Name = "↑")]
     UP = 0x26,
 
     /// <summary>
     ///     RIGHT ARROW key
     /// </summary>
+    [Display(Name = "→")]
     RIGHT = 0x27,
 
     /// <summary>
     ///     DOWN ARROW key
     /// </summary>
+    [Display(Name = "↓")]
     DOWN = 0x28,
 
     /// <summary>
@@ -208,6 +227,7 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     DEL key
     /// </summary>
+    [Display(Name = "Del")]
     DELETE = 0x2E,
 
     /// <summary>
@@ -218,181 +238,217 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     0 key
     /// </summary>
+    [Display(Name = "0")]
     KEY_0 = 0x30,
 
     /// <summary>
     ///     1 key
     /// </summary>
+    [Display(Name = "1")]
     KEY_1 = 0x31,
 
     /// <summary>
     ///     2 key
     /// </summary>
+    [Display(Name = "2")]
     KEY_2 = 0x32,
 
     /// <summary>
     ///     3 key
     /// </summary>
+    [Display(Name = "3")]
     KEY_3 = 0x33,
 
     /// <summary>
     ///     4 key
     /// </summary>
+    [Display(Name = "4")]
     KEY_4 = 0x34,
 
     /// <summary>
     ///     5 key
     /// </summary>
+    [Display(Name = "5")]
     KEY_5 = 0x35,
 
     /// <summary>
     ///     6 key
     /// </summary>
+    [Display(Name = "6")]
     KEY_6 = 0x36,
 
     /// <summary>
     ///     7 key
     /// </summary>
+    [Display(Name = "7")]
     KEY_7 = 0x37,
 
     /// <summary>
     ///     8 key
     /// </summary>
+    [Display(Name = "8")]
     KEY_8 = 0x38,
 
     /// <summary>
     ///     9 key
     /// </summary>
+    [Display(Name = "9")]
     KEY_9 = 0x39,
 
     /// <summary>
     ///     A key
     /// </summary>
+    [Display(Name = "A")]
     KEY_A = 0x41,
 
     /// <summary>
     ///     B key
     /// </summary>
+    [Display(Name = "B")]
     KEY_B = 0x42,
 
     /// <summary>
     ///     C key
     /// </summary>
+    [Display(Name = "C")]
     KEY_C = 0x43,
 
     /// <summary>
     ///     D key
     /// </summary>
+    [Display(Name = "D")]
     KEY_D = 0x44,
 
     /// <summary>
     ///     E key
     /// </summary>
+    [Display(Name = "E")]
     KEY_E = 0x45,
 
     /// <summary>
     ///     F key
     /// </summary>
+    [Display(Name = "F")]
     KEY_F = 0x46,
 
     /// <summary>
     ///     G key
     /// </summary>
+    [Display(Name = "G")]
     KEY_G = 0x47,
 
     /// <summary>
     ///     H key
     /// </summary>
+    [Display(Name = "H")]
     KEY_H = 0x48,
 
     /// <summary>
     ///     I key
     /// </summary>
+    [Display(Name = "I")]
     KEY_I = 0x49,
 
     /// <summary>
     ///     J key
     /// </summary>
+    [Display(Name = "J")]
     KEY_J = 0x4A,
 
     /// <summary>
     ///     K key
     /// </summary>
+    [Display(Name = "K")]
     KEY_K = 0x4B,
 
     /// <summary>
     ///     L key
     /// </summary>
+    [Display(Name = "L")]
     KEY_L = 0x4C,
 
     /// <summary>
     ///     M key
     /// </summary>
+    [Display(Name = "M")]
     KEY_M = 0x4D,
 
     /// <summary>
     ///     N key
     /// </summary>
+    [Display(Name = "N")]
     KEY_N = 0x4E,
 
     /// <summary>
     ///     O key
     /// </summary>
+    [Display(Name = "O")]
     KEY_O = 0x4F,
 
     /// <summary>
     ///     P key
     /// </summary>
+    [Display(Name = "P")]
     KEY_P = 0x50,
 
     /// <summary>
     ///     Q key
     /// </summary>
+    [Display(Name = "Q")]
     KEY_Q = 0x51,
 
     /// <summary>
     ///     R key
     /// </summary>
+    [Display(Name = "R")]
     KEY_R = 0x52,
 
     /// <summary>
     ///     S key
     /// </summary>
+    [Display(Name = "S")]
     KEY_S = 0x53,
 
     /// <summary>
     ///     T key
     /// </summary>
+    [Display(Name = "T")]
     KEY_T = 0x54,
 
     /// <summary>
     ///     U key
     /// </summary>
+    [Display(Name = "U")]
     KEY_U = 0x55,
 
     /// <summary>
     ///     V key
     /// </summary>
+    [Display(Name = "V")]
     KEY_V = 0x56,
 
     /// <summary>
     ///     W key
     /// </summary>
+    [Display(Name = "W")]
     KEY_W = 0x57,
 
     /// <summary>
     ///     X key
     /// </summary>
+    [Display(Name = "X")]
     KEY_X = 0x58,
 
     /// <summary>
     ///     Y key
     /// </summary>
+    [Display(Name = "Y")]
     KEY_Y = 0x59,
 
     /// <summary>
     ///     Z key
     /// </summary>
+    [Display(Name = "Z")]
     KEY_Z = 0x5A,
 
     /// <summary>
@@ -418,51 +474,61 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     Numeric keypad 0 key
     /// </summary>
+    [Display(Name = "0")]
     NUMPAD0 = 0x60,
 
     /// <summary>
     ///     Numeric keypad 1 key
     /// </summary>
+    [Display(Name = "1")]
     NUMPAD1 = 0x61,
 
     /// <summary>
     ///     Numeric keypad 2 key
     /// </summary>
+    [Display(Name = "2")]
     NUMPAD2 = 0x62,
 
     /// <summary>
     ///     Numeric keypad 3 key
     /// </summary>
+    [Display(Name = "3")]
     NUMPAD3 = 0x63,
 
     /// <summary>
     ///     Numeric keypad 4 key
     /// </summary>
+    [Display(Name = "4")]
     NUMPAD4 = 0x64,
 
     /// <summary>
     ///     Numeric keypad 5 key
     /// </summary>
+    [Display(Name = "5")]
     NUMPAD5 = 0x65,
 
     /// <summary>
     ///     Numeric keypad 6 key
     /// </summary>
+    [Display(Name = "6")]
     NUMPAD6 = 0x66,
 
     /// <summary>
     ///     Numeric keypad 7 key
     /// </summary>
+    [Display(Name = "7")]
     NUMPAD7 = 0x67,
 
     /// <summary>
     ///     Numeric keypad 8 key
     /// </summary>
+    [Display(Name = "8")]
     NUMPAD8 = 0x68,
 
     /// <summary>
     ///     Numeric keypad 9 key
     /// </summary>
+    [Display(Name = "9")]
     NUMPAD9 = 0x69,
 
     /// <summary>
@@ -473,6 +539,7 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     Add key
     /// </summary>
+    [Display(Name = "+")]
     ADD = 0x6B,
 
     /// <summary>
@@ -483,16 +550,19 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     Subtract key
     /// </summary>
+    [Display(Name = "-")]
     SUBTRACT = 0x6D,
 
     /// <summary>
     ///     Decimal key
     /// </summary>
+    [Display(Name = ".")]
     DECIMAL = 0x6E,
 
     /// <summary>
     ///     Divide key
     /// </summary>
+    [Display(Name = "/")]
     DIVIDE = 0x6F,
 
     /// <summary>
@@ -628,21 +698,25 @@ public enum VirtualKey : ushort
     /// <summary>
     ///     Left SHIFT key
     /// </summary>
+    [Display(Name = "L⇧")]
     LSHIFT = 0xA0,
 
     /// <summary>
     ///     Right SHIFT key
     /// </summary>
+    [Display(Name = "R⇧")]
     RSHIFT = 0xA1,
 
     /// <summary>
     ///     Left CONTROL key
     /// </summary>
+    [Display(Name = "LCtrl")]
     LCONTROL = 0xA2,
 
     /// <summary>
     ///     Right CONTROL key
     /// </summary>
+    [Display(Name = "RCtrl")]
     RCONTROL = 0xA3,
 
     /// <summary>

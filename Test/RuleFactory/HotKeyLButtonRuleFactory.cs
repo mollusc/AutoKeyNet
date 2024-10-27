@@ -12,10 +12,10 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
     {
         var rules = new List<BaseRuleRecord>
         {
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_C DOWN}{KEY_C UP}{LBUTTON UP}",
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_C DOWN}{KEY_C UP}",
                 "{CONTROL DOWN}{KEY_C DOWN}{KEY_C UP}{CONTROL UP}",
-                option:HotKeyRuleRecordOptionFlags.SuppressNativeBehavior|HotKeyRuleRecordOptionFlags.SuppressNativeBehaviorForPrefixKey), // Copy
-            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_V DOWN}",
+                option:HotKeyRuleRecordOptionFlags.SuppressNativeBehavior), // Copy
+            new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_V DOWN}{KEY_V UP}",
                 "{CONTROL DOWN}{KEY_V DOWN}{KEY_V UP}{CONTROL UP}", option:HotKeyRuleRecordOptionFlags.SuppressNativeBehavior), // Insert
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_B DOWN}", PasteWithoutFormat()), // Insert text without formatting
             new HotKeyRuleRecord("{LBUTTON DOWN}{KEY_X DOWN}",
