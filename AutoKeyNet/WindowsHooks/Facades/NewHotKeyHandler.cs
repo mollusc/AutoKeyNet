@@ -143,29 +143,39 @@ internal class NewHotKeyHandler : BaseKeyHandler, IDisposable
 
     private bool ProcessKey(Input input, string? eWindowTitle, string? eWindowClass, string? eWindowModule, string? eWindowControl)
     {
+        bool cancelNativeBehavior = true;
         _buffer.Add(input);
         Debug.WriteLine(string.Join(" ", _buffer.TakeLast(5).Select(b => $"[{b}]")));
         var firedRules = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl).ToArray();
-        if (_supressedKeys.Any(inputs => _buffer.TakeLast(inputs.Count).SequenceEqual(inputs)))
+        bool isSuppressedKeys = _supressedKeys.Any(inputs => _buffer.TakeLast(inputs.Count).SequenceEqual(inputs, new InputComparerByVKeyAndFlag()));
+        if (isSuppressedKeys)
         {
             _pressedKeys.Add(input);
+            cancelNativeBehavior = true;
         }
         else if (_pressedKeys.Any())
         {
             SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
             _pressedKeys.Clear();
+            cancelNativeBehavior = true;
         }
+        else
+            cancelNativeBehavior = false;
 
         if (firedRules.Any())
         {
-            if (_pressedKeys.Any() && !firedRules.Any(r => r.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior)))
-                SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            //if (!firedRules.Any(r => r.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior)))
+            //{
+            //    SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            //    cancelNativeBehavior = true;
+            //}
             firedRules.ForEach(r => r.Run.Invoke());
             Debug.WriteLine("Rule Proceed");
 
             _pressedKeys.Clear();
+
         }
-        return false;
+        return cancelNativeBehavior;
     }
 
 
