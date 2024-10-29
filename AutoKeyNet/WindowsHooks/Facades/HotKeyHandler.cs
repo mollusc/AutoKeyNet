@@ -17,30 +17,7 @@ namespace AutoKeyNet.WindowsHooks.Facades;
 /// </summary>
 internal class HotKeyHandler : BaseKeyHandler, IDisposable
 {
-    private const int BufferSize = 1000;
-    private readonly Dictionary<(MouseMessage, uint), VirtualKey> _activateMouseKeyEvent = new()
-    {
-        { (MouseMessage.WM_LBUTTONDOWN, 0), VirtualKey.LBUTTON },
-        { (MouseMessage.WM_RBUTTONDOWN, 0), VirtualKey.RBUTTON },
-        { (MouseMessage.WM_MBUTTONDOWN, 0), VirtualKey.MBUTTON },
-        { (MouseMessage.WM_XBUTTONDOWN, XBUTTON1), VirtualKey.XBUTTON1 },
-        { (MouseMessage.WM_XBUTTONDOWN, XBUTTON2), VirtualKey.XBUTTON2 }
-    };
-
-    private readonly Buffer<Input> _buffer = new(BufferSize);
-
-
-    /// <summary>
-    ///     Dictionary of Windows mouse events and virtual keys, used for removing virtual mouse keys to the buffer.
-    /// </summary>
-    private readonly Dictionary<(MouseMessage, uint), VirtualKey> _deactivateMouseKeyEvent = new()
-    {
-        { (MouseMessage.WM_LBUTTONUP, 0), VirtualKey.LBUTTON },
-        { (MouseMessage.WM_RBUTTONUP, 0), VirtualKey.RBUTTON },
-        { (MouseMessage.WM_MBUTTONUP, 0), VirtualKey.MBUTTON },
-        { (MouseMessage.WM_XBUTTONUP, XBUTTON1), VirtualKey.XBUTTON1 },
-        { (MouseMessage.WM_XBUTTONUP, XBUTTON2), VirtualKey.XBUTTON2 }
-    };
+    private readonly Buffer<Input> _buffer;
 
     /// <summary>
     ///     Keyboard hook
@@ -70,6 +47,8 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="mouseHook">Mouse hook</param>
     public HotKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
     {
+        int bufferSize = Rules.Max(r => r.KeyInputs.Length);
+        _buffer = new Buffer<Input>(bufferSize);
         InitializePrefixKeys();
         _mouseHook = mouseHook;
         _mouseHook.OnHookEvent += OnMouseHookEvent;
@@ -116,38 +95,18 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="e">Event arguments</param>
     private void OnKeyboardHookEvent(object? sender, KeyboardHookEventArgs e)
     {
-        var kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
-                                         throw new InvalidOperationException());
-        var keyFlag = e.WParam == (nint)KeyboardMessage.WM_KEYDOWN ? KeyEventFlags.KEYDOWN : KeyEventFlags.KEYUP;
-        var input = kbd.VirtualKey.ToInput(keyFlag);
-        e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+        e.Cancel = ProcessKey(e.Input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
     }
     private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
     {
-        Input input = new Input
-        {
-            Type = InputType.INPUT_KEYBOARD
-        };
-        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkDown))
-        {
-            input.Data.KeyboardInput.VirtualKey = (ushort)vkDown;
-            input.Data.KeyboardInput.Flags = KeyEventFlags.KEYDOWN;
-            e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
-        }
-
-        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkUp))
-        {
-            input.Data.KeyboardInput.VirtualKey = (ushort)vkUp;
-            input.Data.KeyboardInput.Flags = KeyEventFlags.KEYUP;
-            e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
-        }
+        e.Cancel = ProcessKey(e.Input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
     }
 
     private bool ProcessKey(Input input, string? eWindowTitle, string? eWindowClass, string? eWindowModule, string? eWindowControl)
     {
         bool cancelNativeBehavior = true;
         _buffer.Add(input);
-        Debug.WriteLine(string.Join(" ", _buffer.TakeLast(5).Select(b => $"[{b}]")));
+        Debug.WriteLine(string.Join(" ", _buffer.Where(input => input.Data.MouseInput.Flags != MouseEvents.MOVE).TakeLast(5).Select(b => $"[{b}]")));
         var firedRules = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl).ToArray();
         bool isSuppressedKeys = _suppressedKeys.Any(inputs => _buffer.TakeLast(inputs.Count).SequenceEqual(inputs, new InputComparerByVKeyAndFlag()));
         if (isSuppressedKeys)
@@ -166,14 +125,8 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
 
         if (firedRules.Any())
         {
-            //if (!firedRules.Any(r => r.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior)))
-            //{
-            //    SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
-            //    cancelNativeBehavior = true;
-            //}
             firedRules.ForEach(r => r.Run.Invoke());
-            Debug.WriteLine("Rule Proceed");
-
+            Debug.WriteLine("Run rules: " + string.Join("\t", firedRules.Select(r => r.KeyText)));
             _pressedKeys.Clear();
 
         }
@@ -199,9 +152,13 @@ internal class InputComparerByVKeyAndFlag : IEqualityComparer<Input>
 {
     public bool Equals(Input x, Input y)
     {
-        return x.Type == y.Type 
-               && x.Data.KeyboardInput.VirtualKey == y.Data.KeyboardInput.VirtualKey 
-               && x.Data.KeyboardInput.Flags == y.Data.KeyboardInput.Flags;
+        return x.Type == y.Type
+               && (
+                   (x.Type == InputType.INPUT_KEYBOARD && x.Data.KeyboardInput.VirtualKey ==
+                                                       y.Data.KeyboardInput.VirtualKey
+                                                       && x.Data.KeyboardInput.Flags == y.Data.KeyboardInput.Flags)
+                   || (x.Type == InputType.INPUT_MOUSE && x.Data.MouseInput.Flags == y.Data.MouseInput.Flags
+                                                       && x.Data.MouseInput.MouseData == y.Data.MouseInput.MouseData));
     }
 
     public int GetHashCode(Input obj)

@@ -19,23 +19,22 @@ public static class VirtualKeyExtension
     /// <returns>An Input structure that represents the virtual key</returns>
     public static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
         nuint extraInfo = KEY_IGNORE) =>
-        //VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON1),
-        GetKeyboardInput(virtualKey, flags, extraInfo);
-    //virtualKey switch
-    //{
-    //    VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),
-    //    VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.LEFTDOWN.ToInput(),
-    //    VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.RIGHTUP.ToInput(),
-    //    VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.RIGHTDOWN.ToInput(),
-    //    VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.MIDDLEUP.ToInput(),
-    //    VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.MIDDLEDOWN.ToInput(),
-        //VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON1),
-    //    VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON1),
-    //    VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON2),
-    //    VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON2),
+    //GetKeyboardInput(virtualKey, flags, extraInfo);
+    virtualKey switch
+    {
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),
+        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.LEFTDOWN.ToInput(),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.RIGHTUP.ToInput(),
+        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.RIGHTDOWN.ToInput(),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.MIDDLEUP.ToInput(),
+        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.MIDDLEDOWN.ToInput(),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON1),
+        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON1),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON2),
+        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON2),
 
-    //    _ => GetKeyboardInput(virtualKey, flags, extraInfo)
-    //};
+        _ => GetKeyboardInput(virtualKey, flags, extraInfo)
+    };
 
     /// <summary>
     ///     Converts a virtual key to a keyboard input

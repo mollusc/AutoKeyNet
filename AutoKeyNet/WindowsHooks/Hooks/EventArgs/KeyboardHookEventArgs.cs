@@ -1,4 +1,6 @@
-﻿namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+﻿using AutoKeyNet.WindowsHooks.WindowsStruct;
+
+namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
 /// <summary>
 ///     Event arguments for a keyboard hook
@@ -17,14 +19,15 @@ internal class KeyboardHookEventArgs : BaseHookEventArgs
     /// <param name="windowClass">Class of the foreground window</param>
     /// <param name="windowModule">Module name (file *.exe) of the foreground window</param>
     /// <param name="windowControl">Name of the focused control</param>
-    public KeyboardHookEventArgs(Keys vkCode, char letter, char invariantLetter, nint wParam, nint lParam,
+    public KeyboardHookEventArgs(Input input,
         string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
-        VkCode = vkCode;
-        Letter = letter;
-        InvariantLetter = invariantLetter;
-        WParam = wParam;
-        LParam = lParam;
+        //VkCode = vkCode;
+        //Letter = letter;
+        //InvariantLetter = invariantLetter;
+        //WParam = wParam;
+        //LParam = lParam;
+        Input = input;
         WindowClass = windowClass;
         WindowTitle = windowTitle;
         WindowModule = windowModule;
@@ -32,30 +35,32 @@ internal class KeyboardHookEventArgs : BaseHookEventArgs
         Cancel = false;
     }
 
-    /// <summary>
-    ///     Virtual key code
-    /// </summary>
-    public Keys VkCode { get; }
+    public Input Input { get; set; }
 
-    /// <summary>
-    ///     Unicode character
-    /// </summary>
-    public char Letter { get; }
+    ///// <summary>
+    /////     Virtual key code
+    ///// </summary>
+    //public Keys VkCode { get; }
 
-    /// <summary>
-    ///     Unicode character independent of current language layout
-    /// </summary>
-    public char InvariantLetter { get; }
+    ///// <summary>
+    /////     Unicode character
+    ///// </summary>
+    //public char Letter { get; }
 
-    /// <summary>
-    ///     The identifier of the keyboard message
-    /// </summary>
-    public nint WParam { get; }
+    ///// <summary>
+    /////     Unicode character independent of current language layout
+    ///// </summary>
+    //public char InvariantLetter { get; }
 
-    /// <summary>
-    ///     A pointer to a Windows API KBDLLHOOKSTRUCT structure
-    /// </summary>
-    public nint LParam { get; }
+    ///// <summary>
+    /////     The identifier of the keyboard message
+    ///// </summary>
+    //public nint WParam { get; }
+
+    ///// <summary>
+    /////     A pointer to a Windows API KBDLLHOOKSTRUCT structure
+    ///// </summary>
+    //public nint LParam { get; }
 
     /// <summary>
     ///     Property to prevent sending pressed key to the system.

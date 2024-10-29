@@ -67,8 +67,38 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
                                                  throw new InvalidOperationException());
             if (hookStruct.ExtraInfo != KEY_IGNORE)
             {
-                var mouseHookEventArgs = new MouseHookEventArgs(wParam, lParam,
-                    hookStruct.MouseData >> 16, WindowHelper.GetActiveWindowTitle(),
+                MouseEvents mouseEvent = wParam switch
+                {
+                    (nint)MouseMessage.WM_LBUTTONUP => MouseEvents.LEFTUP,
+                    (nint)MouseMessage.WM_LBUTTONDOWN => MouseEvents.LEFTDOWN,
+                    (nint)MouseMessage.WM_RBUTTONUP => MouseEvents.RIGHTUP,
+                    (nint)MouseMessage.WM_RBUTTONDOWN => MouseEvents.RIGHTDOWN,
+                    (nint)MouseMessage.WM_MBUTTONUP => MouseEvents.MIDDLEUP,
+                    (nint)MouseMessage.WM_MBUTTONDOWN => MouseEvents.MIDDLEDOWN,
+                    (nint)MouseMessage.WM_XBUTTONUP => MouseEvents.XUP,
+                    (nint)MouseMessage.WM_XBUTTONDOWN => MouseEvents.XDOWN,
+                    (nint)MouseMessage.WM_MOUSEMOVE => MouseEvents.MOVE,
+                    (nint)MouseMessage.WM_MOUSEWHEEL => MouseEvents.WHEEL,
+                    _ => 0
+                };
+
+                Input input = new()
+                {
+                    Type = InputType.INPUT_MOUSE,
+                    Data = new ()
+                    {
+                        MouseInput = new()
+                        {
+                            Dx = hookStruct.Point.X,
+                            Dy = hookStruct.Point.Y,
+                            MouseData = hookStruct.MouseData,
+                            Flags = mouseEvent,
+                            Time = (uint)hookStruct.Time,
+                            ExtraInfo = hookStruct.ExtraInfo,
+                        }
+                    }
+                };
+                var mouseHookEventArgs = new MouseHookEventArgs(input, WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(),
                     WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
                 OnHookEvent?.Invoke(wParam, mouseHookEventArgs);

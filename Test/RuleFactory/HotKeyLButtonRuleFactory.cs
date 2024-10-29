@@ -2,7 +2,6 @@
 using AutoKeyNet.WindowsHooks.Rule;
 using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
-using NativeMethods = AutoKeyNetApp.WinApi.NativeMethods;
 
 namespace AutoKeyNetApp.RuleFactory;
 

@@ -66,8 +66,22 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
                                              throw new InvalidOperationException());
             if (kbd.ExtraInfo != KEY_IGNORE)
             {
-                var keyboardHookEventArgs = new KeyboardHookEventArgs((Keys)kbd.VirtualKey,
-                    kbd.VirtualKey.ToUnicode(), kbd.VirtualKey.ToUnicode(true), wParam, lParam,
+                Input input = new()
+                {
+                    Type = InputType.INPUT_KEYBOARD,
+                    Data = new ()
+                    {
+                        KeyboardInput = new()
+                        {
+                            VirtualKey = (ushort)kbd.VirtualKey,
+                            ScanCode = (ushort)kbd.ScanCode,
+                            Time = (int)kbd.Time,
+                            ExtraInfo = kbd.ExtraInfo,
+                            Flags = (wParam == (uint)KeyboardMessage.WM_KEYDOWN || wParam == (uint)KeyboardMessage.WM_SYSKEYDOWN)? KeyEventFlags.KEYDOWN : KeyEventFlags.KEYUP
+                        }
+                    }
+                };
+                var keyboardHookEventArgs = new KeyboardHookEventArgs(input,
                     WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(), WindowHelper.GetActiveWindowModuleFileName(),
                     WindowHelper.GetActiveWindowFocusControlName());

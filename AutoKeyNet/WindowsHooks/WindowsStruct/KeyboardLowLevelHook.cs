@@ -12,7 +12,7 @@ internal struct KeyboardLowLevelHook
     /// <summary>
     ///     Specifies a virtual-key code. The code must be a value in the range 1 to 254.
     /// </summary>
-    public VirtualKey VirtualKey;
+    public uint VirtualKey;
 
     /// <summary>
     ///     Specifies a hardware scan code for the key.
