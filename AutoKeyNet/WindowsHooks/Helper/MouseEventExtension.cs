@@ -4,7 +4,7 @@ using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
-internal static class MouseEventExtension
+public static class MouseEventExtension
 {
     /// <summary>
     ///     Convert MouseEvents to Input

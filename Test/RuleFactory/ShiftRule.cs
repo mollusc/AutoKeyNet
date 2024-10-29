@@ -1,6 +1,8 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Rule;
+using AutoKeyNet.WindowsHooks.WindowsEnums;
 using Action = System.Action;
 using Timer = System.Threading.Timer;
 
@@ -27,11 +29,11 @@ internal class ShiftRule : BaseRuleFactory
     {
         var rules = new List<BaseRuleRecord>
         {
-            new HotKeyRuleRecord("{LSHIFT DOWN}", ActivateTimer()),
-            new HotKeyRuleRecord("{LSHIFT UP}", TryChangeLanguage(en_US)),
+            new HotKeyRuleRecord([VirtualKey.LSHIFT.ToInput(KeyEventFlags.KEYDOWN)], ActivateTimer()),
+            new HotKeyRuleRecord([VirtualKey.LSHIFT.ToInput(KeyEventFlags.KEYUP)], TryChangeLanguage(en_US)),
 
-            new HotKeyRuleRecord("{RSHIFT DOWN}", ActivateTimer()),
-            new HotKeyRuleRecord("{RSHIFT UP}", TryChangeLanguage(ru_RU))
+            new HotKeyRuleRecord([VirtualKey.RSHIFT.ToInput(KeyEventFlags.KEYDOWN)], ActivateTimer()),
+            new HotKeyRuleRecord([VirtualKey.RSHIFT.ToInput(KeyEventFlags.KEYUP)], TryChangeLanguage(ru_RU))
         };
         return rules;
     }

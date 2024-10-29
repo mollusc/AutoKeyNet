@@ -40,7 +40,7 @@ internal static class Program
             new ShiftRule(),
             //new HotStringRuleFactory(),
             new HotKeyLButtonRuleFactory(),
-            //new HotKeyProgramRuleFactory(),
+            new HotKeyProgramRuleFactory(),
             //new OutlookRuleFactory()
         };
 

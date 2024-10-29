@@ -4,7 +4,7 @@
 ///     Specifies the mouse events that can be sent to a window.
 /// </summary>
 [Flags]
-internal enum MouseEvents : uint
+public enum MouseEvents : uint
 {
     /// <summary>
     ///     The coordinates are absolute screen coordinates.

@@ -1,10 +1,13 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.Rule;
+using AutoKeyNet.WindowsHooks.WinApi;
 using AutoKeyNet.WindowsHooks.WindowsEnums;
 using AutoKeyNet.WindowsHooks.WindowsStruct;
+using Microsoft.VisualStudio.Services.Common;
 using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
@@ -14,9 +17,7 @@ namespace AutoKeyNet.WindowsHooks.Facades;
 /// </summary>
 internal class HotKeyHandler : BaseKeyHandler, IDisposable
 {
-    /// <summary>
-    ///     Dictionary of Windows mouse events and virtual keys, used for adding virtual mouse keys to the buffer.
-    /// </summary>
+    private const int BufferSize = 1000;
     private readonly Dictionary<(MouseMessage, uint), VirtualKey> _activateMouseKeyEvent = new()
     {
         { (MouseMessage.WM_LBUTTONDOWN, 0), VirtualKey.LBUTTON },
@@ -26,10 +27,8 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         { (MouseMessage.WM_XBUTTONDOWN, XBUTTON2), VirtualKey.XBUTTON2 }
     };
 
-    /// <summary>
-    ///     Buffer for pressed keys
-    /// </summary>
-    private readonly HashSet<ushort> _buffer = new();
+    private readonly Buffer<Input> _buffer = new(BufferSize);
+
 
     /// <summary>
     ///     Dictionary of Windows mouse events and virtual keys, used for removing virtual mouse keys to the buffer.
@@ -56,12 +55,12 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <summary>
     ///     A list of prefix keys from rules used to suppress key behavior.
     /// </summary>
-    private readonly HashSet<ushort> _prefixKeys = new();
+    private readonly List<List<Input>> _suppressedKeys = new();
 
     /// <summary>
     ///     A list of pressed keys
     /// </summary>
-    private HashSet<ushort> _pressedKeys = new();
+    private readonly List<Input> _pressedKeys = new();
 
     /// <summary>
     ///     Constructor of the class for handling hotkeys
@@ -71,11 +70,11 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <param name="mouseHook">Mouse hook</param>
     public HotKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
     {
+        InitializePrefixKeys();
         _mouseHook = mouseHook;
         _mouseHook.OnHookEvent += OnMouseHookEvent;
         _keyboardHook = kbdHook;
         _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
-        InitializePrefixKeys();
     }
 
     /// <summary>
@@ -93,24 +92,21 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     private void InitializePrefixKeys()
     {
         foreach (var rule in Rules)
-            if (rule is HotKeyRuleRecord hotKeyRule
-                && hotKeyRule.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehaviorForPrefixKey))
-                if (hotKeyRule.KeyInputs.ToVirtualKeys().FirstOrDefault() is var virtualKey)
-                    _prefixKeys.Add((ushort)virtualKey);
-    }
-
-    /// <summary>
-    ///     Method for handling mouse events
-    /// </summary>
-    /// <param name="sender">Sender of the event</param>
-    /// <param name="e">Event arguments</param>
-    private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
-    {
-        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkDown))
-            e.Cancel = ProcessKeyDown((ushort)vkDown, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
-
-        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkUp))
-            e.Cancel = ProcessKeyUp((ushort)vkUp);
+            if (rule is HotKeyRuleRecord hotKeyRule)
+            {
+                for (int i = 0; i < rule.KeyInputs.Length; i++)
+                {
+                    if (rule.KeyInputs[i].Data.KeyboardInput.ExtraInfo != NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR)
+                        continue;
+                    List<Input> inputs = new List<Input>();
+                    for (int j = 0; j <= i; j++)
+                    {
+                        inputs.Add(rule.KeyInputs[j]);
+                    }
+                    if (_suppressedKeys.All(l => !l.SequenceEqual(inputs)) && inputs.Any())
+                        _suppressedKeys.Add(inputs);
+                }
+            }
     }
 
     /// <summary>
@@ -122,116 +118,95 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     {
         var kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
                                          throw new InvalidOperationException());
-        var vk = kbd.VirtualKey;
+        var keyFlag = e.WParam == (nint)KeyboardMessage.WM_KEYDOWN ? KeyEventFlags.KEYDOWN : KeyEventFlags.KEYUP;
+        var input = kbd.VirtualKey.ToInput(keyFlag);
+        e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+    }
+    private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
+    {
+        Input input = new Input
+        {
+            Type = InputType.INPUT_KEYBOARD
+        };
+        if (_activateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkDown))
+        {
+            input.Data.KeyboardInput.VirtualKey = (ushort)vkDown;
+            input.Data.KeyboardInput.Flags = KeyEventFlags.KEYDOWN;
+            e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+        }
 
-        if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
-            e.Cancel = ProcessKeyDown((ushort)vk, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+        if (_deactivateMouseKeyEvent.TryGetValue(((MouseMessage)e.WParam, (uint)e.MouseData), out var vkUp))
+        {
+            input.Data.KeyboardInput.VirtualKey = (ushort)vkUp;
+            input.Data.KeyboardInput.Flags = KeyEventFlags.KEYUP;
+            e.Cancel = ProcessKey(input, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
+        }
+    }
 
-        if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
-            e.Cancel = ProcessKeyUp((ushort)vk);
+    private bool ProcessKey(Input input, string? eWindowTitle, string? eWindowClass, string? eWindowModule, string? eWindowControl)
+    {
+        bool cancelNativeBehavior = true;
+        _buffer.Add(input);
+        Debug.WriteLine(string.Join(" ", _buffer.TakeLast(5).Select(b => $"[{b}]")));
+        var firedRules = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl).ToArray();
+        bool isSuppressedKeys = _suppressedKeys.Any(inputs => _buffer.TakeLast(inputs.Count).SequenceEqual(inputs, new InputComparerByVKeyAndFlag()));
+        if (isSuppressedKeys)
+        {
+            _pressedKeys.Add(input);
+            cancelNativeBehavior = true;
+        }
+        else if (_pressedKeys.Any())
+        {
+            SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            _pressedKeys.Clear();
+            cancelNativeBehavior = true;
+        }
+        else
+            cancelNativeBehavior = false;
+
+        if (firedRules.Any())
+        {
+            //if (!firedRules.Any(r => r.Options.HasFlag(HotKeyRuleRecordOptionFlags.SuppressNativeBehavior)))
+            //{
+            //    SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            //    cancelNativeBehavior = true;
+            //}
+            firedRules.ForEach(r => r.Run.Invoke());
+            Debug.WriteLine("Rule Proceed");
+
+            _pressedKeys.Clear();
+
+        }
+        return cancelNativeBehavior;
     }
 
 
-    /// <summary>
-    ///     Method that processes a key down event.
-    /// </summary>
-    /// <param name="vk">A virtual key</param>
-    /// <param name="windowTitle">
-    ///     Title of the foreground window for filtering rules. If the variable is null, the filter is
-    ///     not applied.
-    /// </param>
-    /// <param name="windowClass">
-    ///     Class of the foreground window for filtering rules. If the variable is null, the filter is
-    ///     not applied.
-    /// </param>
-    /// <param name="windowModule">
-    ///     Module name (file *.exe) of the foreground window for filtering rules. If the variable is
-    ///     null, the filter is not applied.
-    /// </param>
-    /// <param name="windowControl">
-    ///     Name of the focused control for filtering rules. If the variable is null, the filter is not
-    ///     applied.
-    /// </param>
-    /// <returns>A boolean value indicating whether the key event should not be sent to the system (true) or not (false).</returns>
-    private bool ProcessKeyDown(ushort vk, string? windowTitle, string? windowClass, string? windowModule,
-        string? windowControl)
+    private IEnumerable<HotKeyRuleRecord> CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
-        _pressedKeys.Clear();
-
-        _buffer.Add(vk);
-        if (_buffer.Count == 1 && _prefixKeys.Contains(vk))
-            return true;
-
-        if (CheckRules(windowTitle, windowClass, windowModule, windowControl))
-        {
-            _pressedKeys = new HashSet<ushort>(_buffer);
-            return true;
-        }
-
-        return false;
-    }
-
-    /// <summary>
-    ///     Method that processes a key up event.
-    /// </summary>
-    /// <param name="vk">A virtual key</param>
-    /// <returns>A boolean value indicating whether the key event should not be sent to the system (true) or not (false).</returns>
-    private bool ProcessKeyUp(ushort vk)
-    {
-        _buffer.Remove(vk);
-
-        if (_pressedKeys.Count > 0)
-        {
-            _pressedKeys.Remove(vk);
-            return true;
-        }
-
-        if (_buffer.Count == 0 && _prefixKeys.Contains(vk))
-        {
-            var virtualKey = (VirtualKey)vk;
-            var inputs = virtualKey.ToInputsPressKey().ToArray();
-            SendInputAsync(inputs).ConfigureAwait(false);
-            return true;
-        }
-
-        _buffer.Clear();
-        return false;
-    }
-
-    /// <summary>
-    ///     Method for checking rules
-    /// </summary>
-    /// <param name="windowTitle">
-    ///     Title of the foreground window for filtering rules. If the variable is null, the filter is
-    ///     not applied.
-    /// </param>
-    /// <param name="windowClass">
-    ///     Class of the foreground window for filtering rules. If the variable is null, the filter is
-    ///     not applied.
-    /// </param>
-    /// <param name="windowModule">
-    ///     Module name (file *.exe) of the foreground window for filtering rules. If the variable is
-    ///     null, the filter is not applied.
-    /// </param>
-    /// <param name="windowControl">
-    ///     Name of the focused control for filtering rules. If the variable is null, the filter is not
-    ///     applied.
-    /// </param>
-    /// <returns>True if a rule was triggered; otherwise, false.</returns>
-    private bool CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
-    {
-        var result = false;
         if (_buffer.Count > 0)
             foreach (var rule in Rules)
-                if (rule is HotKeyRuleRecord
-                    && _buffer.SetEquals(rule.KeyInputs.ToVirtualKeys().Cast<ushort>())
+                if (rule is HotKeyRuleRecord hotKeyRuleRecord
+                    && _buffer.TakeLast(rule.KeyInputs.Length).SequenceEqual(rule.KeyInputs, new InputComparerByVKeyAndFlag())
                     && (rule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
                         true))
                 {
-                    rule.Run.Invoke();
-                    result = true;
+                    yield return hotKeyRuleRecord;
                 }
-
-        return result;
     }
 }
+
+internal class InputComparerByVKeyAndFlag : IEqualityComparer<Input>
+{
+    public bool Equals(Input x, Input y)
+    {
+        return x.Type == y.Type 
+               && x.Data.KeyboardInput.VirtualKey == y.Data.KeyboardInput.VirtualKey 
+               && x.Data.KeyboardInput.Flags == y.Data.KeyboardInput.Flags;
+    }
+
+    public int GetHashCode(Input obj)
+    {
+        return HashCode.Combine((int)obj.Type, obj.Data.KeyboardInput.VirtualKey, obj.Data.KeyboardInput.Flags);
+    }
+}
+

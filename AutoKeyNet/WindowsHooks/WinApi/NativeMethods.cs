@@ -5,14 +5,15 @@ using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.WinApi;
 
-internal static class NativeMethods
+public static class NativeMethods
 {
-    internal const uint KEY_IGNORE = 0xFFC3D44F;
+    public const uint KEY_IGNORE = 0xFFC3D44F;
+    public const uint KEY_SUPRESS_NATIVE_BEHAVIOUR = 0xFFC3D450;
     internal const uint HC_ACTION = 0;
     internal const uint WINEVENT_OUTOFCONTEXT = 0;
     internal const uint EVENT_SYSTEM_FOREGROUND = 3;
     internal const uint MAPVK_VK_TO_VSC = 0x00;
-    internal const uint XBUTTON1 = 0x0001;
+    public const uint XBUTTON1 = 0x0001;
     internal const uint XBUTTON2 = 0x0002;
 
     internal static Task SendInputAsync(Input[] inputs) => Task.Run(() => SendInput(inputs));

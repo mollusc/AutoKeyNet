@@ -1,6 +1,6 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace AutoKeyNet.WindowsHooks.WinApi;
+namespace AutoKeyNetApp.WinApi;
 
 public static class NativeMethods
 {
