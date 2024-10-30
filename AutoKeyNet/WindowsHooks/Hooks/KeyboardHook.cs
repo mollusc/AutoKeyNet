@@ -10,7 +10,7 @@ namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
 ///     Class for keyboard hooking
 /// </summary>
-internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
+internal class KeyboardHook : BaseHook<HookEventArgs>
 {
     /// <summary>
     ///     Delegate for the callback function
@@ -25,11 +25,6 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
         _hookCallback = LowLevelKeyboardProc;
         InitializeHook();
     }
-
-    /// <summary>
-    ///     Event that occurs when a key is pressed or released.
-    /// </summary>
-    public event EventHandler<KeyboardHookEventArgs>? OnHookEvent;
 
     /// <summary>
     ///     Set of the keyboard hook
@@ -81,12 +76,12 @@ internal class KeyboardHook : BaseHook, IHookEvent<KeyboardHookEventArgs>
                         }
                     }
                 };
-                var keyboardHookEventArgs = new KeyboardHookEventArgs(input,
+                var keyboardHookEventArgs = new HookEventArgs(input,
                     WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(), WindowHelper.GetActiveWindowModuleFileName(),
                     WindowHelper.GetActiveWindowFocusControlName());
 
-                OnHookEvent?.Invoke(kbd.VirtualKey, keyboardHookEventArgs);
+                OnHookEvent(keyboardHookEventArgs);
                 if (keyboardHookEventArgs.Cancel)
                     return 1;
             }

@@ -30,7 +30,7 @@ public struct Input
         switch (Type)
         {
             case InputType.INPUT_MOUSE:
-                return $"Mouse: {Data.MouseInput.ToVirtualKey()} {Data.MouseInput.Flags}";
+                return Data.MouseInput.Flags.ToString();
             case InputType.INPUT_KEYBOARD:
                 VirtualKey vk = (VirtualKey)Data.KeyboardInput.VirtualKey;
                 string? eventFlag = Data.KeyboardInput.Flags switch

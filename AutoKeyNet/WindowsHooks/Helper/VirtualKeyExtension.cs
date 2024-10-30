@@ -19,7 +19,6 @@ public static class VirtualKeyExtension
     /// <returns>An Input structure that represents the virtual key</returns>
     public static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
         nuint extraInfo = KEY_IGNORE) =>
-    //GetKeyboardInput(virtualKey, flags, extraInfo);
     virtualKey switch
     {
         VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),

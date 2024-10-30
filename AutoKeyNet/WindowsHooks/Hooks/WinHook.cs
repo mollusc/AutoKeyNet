@@ -7,7 +7,7 @@ namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
 ///     Class for Windows hooking
 /// </summary>
-internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
+internal class WinHook : BaseHook<WinBaseHookEventArgs>
 {
     /// <summary>
     ///     Delegate for the callback function
@@ -22,11 +22,6 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
         _hookEvent = WinEventProc;
         InitializeHook();
     }
-
-    /// <summary>
-    ///     Event that is triggered when a Windows event occurs.
-    /// </summary>
-    public event EventHandler<WinBaseHookEventArgs>? OnHookEvent;
 
     /// <summary>
     ///     Set of the Windows hook
@@ -53,7 +48,7 @@ internal class WinHook : BaseHook, IHookEvent<WinBaseHookEventArgs>
     {
         var winBaseHookEventArgs =
             new WinBaseHookEventArgs(WindowHelper.GetActiveWindowTitle(), eventType, handle);
-        OnHookEvent?.Invoke(hWinEventHook, winBaseHookEventArgs);
+        OnHookEvent(winBaseHookEventArgs);
     }
 
     /// <summary>

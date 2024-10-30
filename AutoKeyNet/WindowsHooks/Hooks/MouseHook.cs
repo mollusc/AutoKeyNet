@@ -11,7 +11,7 @@ namespace AutoKeyNet.WindowsHooks.Hooks;
 /// <summary>
 ///     Class for mouse hooking
 /// </summary>
-internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
+internal class MouseHook : BaseHook<HookEventArgs>
 {
     /// <summary>
     ///     Delegate for the callback function
@@ -28,11 +28,6 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
     }
 
     /// <summary>
-    ///     Event that is triggered when the mouse is moved or a mouse button is pressed.
-    /// </summary>
-    public event EventHandler<MouseHookEventArgs>? OnHookEvent;
-
-    /// <summary>
     ///     Set of the mouse hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
@@ -41,9 +36,7 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
         using var curProcess = Process.GetCurrentProcess();
         using var curModule = curProcess.MainModule;
         if (curModule != null)
-            return SetWindowsHookEx((int)HookType.WH_MOUSE_LL, _hookCallback, GetModuleHandle(curModule.ModuleName),
-                0);
-
+            return SetWindowsHookEx((int)HookType.WH_MOUSE_LL, _hookCallback, GetModuleHandle(curModule.ModuleName), 0);
         throw new NullReferenceException();
     }
 
@@ -98,10 +91,11 @@ internal class MouseHook : BaseHook, IHookEvent<MouseHookEventArgs>
                         }
                     }
                 };
-                var mouseHookEventArgs = new MouseHookEventArgs(input, WindowHelper.GetActiveWindowTitle(),
+                var mouseHookEventArgs = new HookEventArgs(input, WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(),
                     WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
-                OnHookEvent?.Invoke(wParam, mouseHookEventArgs);
+
+                OnHookEvent(mouseHookEventArgs);
                 if (mouseHookEventArgs.Cancel)
                     return 1;
             }

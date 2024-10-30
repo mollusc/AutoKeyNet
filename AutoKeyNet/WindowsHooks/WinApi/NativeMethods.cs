@@ -13,12 +13,12 @@ public static class NativeMethods
     internal const uint WINEVENT_OUTOFCONTEXT = 0;
     internal const uint EVENT_SYSTEM_FOREGROUND = 3;
     internal const uint MAPVK_VK_TO_VSC = 0x00;
-    public const uint XBUTTON1 = 0x0001;
-    internal const uint XBUTTON2 = 0x0002;
+    public const uint XBUTTON1 = 0x0001<<16;
+    public const uint XBUTTON2 = 0x0002<<16;
 
-    internal static Task SendInputAsync(Input[] inputs) => Task.Run(() => SendInput(inputs));
+    public static Task SendInputAsync(Input[] inputs) => Task.Run(() => SendInput(inputs));
 
-    internal static void SendInput(Input[] inputs) => SendInput((uint)inputs.Length, inputs, Input.Size);
+    public static void SendInput(Input[] inputs) => SendInput((uint)inputs.Length, inputs, Input.Size);
 
     [DllImport("user32.dll", SetLastError = true)]
     internal static extern uint SendInput(uint nInputs, Input[] pInputs, int cbSize);
