@@ -51,7 +51,7 @@ public class BaseRuleRecord
     }
 
     protected BaseRuleRecord(Input[] hotKeys, Action run, WindowCondition? checkWindowCondition) :
-        this(hotKeys.ToArray(), string.Join(", ", hotKeys.Select(h => $"[{h.ToString()}]")), run, checkWindowCondition)
+        this(hotKeys.ToArray(), string.Join(" ", hotKeys.Select(h => $"[{h.ToString()}]")), run, checkWindowCondition)
     {
     }
     private BaseRuleRecord(Input[] keyInputs, string keyText, Action run, WindowCondition? checkWindowCondition)

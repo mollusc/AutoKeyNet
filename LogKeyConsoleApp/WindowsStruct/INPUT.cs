@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
-using AutoKeyNet.WindowsHooks.Helper;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
+using LogKeyConsoleApp.Helper;
+using LogKeyConsoleApp.WindowsEnums;
 
-namespace AutoKeyNet.WindowsHooks.WindowsStruct;
+namespace LogKeyConsoleApp.WindowsStruct;
 
 /// <summary>
 ///     Contains information about a simulated input event.

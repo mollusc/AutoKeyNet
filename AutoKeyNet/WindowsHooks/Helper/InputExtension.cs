@@ -33,8 +33,8 @@ internal static class InputExtension
             MouseEvents.LEFTDOWN => VirtualKey.LBUTTON,
             MouseEvents.RIGHTDOWN => VirtualKey.RBUTTON,
             MouseEvents.MIDDLEDOWN => VirtualKey.MBUTTON,
-            MouseEvents.XDOWN when uMi.MouseData == NativeMethods.XBUTTON1 => VirtualKey.XBUTTON1,
-            MouseEvents.XDOWN when uMi.MouseData == NativeMethods.XBUTTON2 => VirtualKey.XBUTTON2,
+            MouseEvents.XDOWN when (uMi.MouseData & NativeMethods.XBUTTON1) == NativeMethods.XBUTTON1 => VirtualKey.XBUTTON1,
+            MouseEvents.XDOWN when (uMi.MouseData & NativeMethods.XBUTTON2) == NativeMethods.XBUTTON2 => VirtualKey.XBUTTON2,
             _ => 0
         };
 }
