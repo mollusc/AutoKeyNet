@@ -1,4 +1,6 @@
-﻿namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+﻿using Windows.Win32.Foundation;
+
+namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
 /// <summary>
 ///     Event arguments for a Windows hook
@@ -10,12 +12,12 @@ internal class WinBaseHookEventArgs : BaseHookEventArgs
     /// </summary>
     /// <param name="windowTitle">Title of the foreground window</param>
     /// <param name="eventType">Event type</param>
-    /// <param name="handle">Identifier of a window</param>
-    public WinBaseHookEventArgs(string? windowTitle, uint eventType, nint handle)
+    /// <param name="hwnd">Identifier of a window</param>
+    public WinBaseHookEventArgs(string? windowTitle, uint eventType, HWND hwnd)
     {
         WindowWindowTitle = windowTitle;
         EventType = eventType;
-        Handle = handle;
+        Hwnd = hwnd;
     }
 
     /// <summary>
@@ -31,5 +33,5 @@ internal class WinBaseHookEventArgs : BaseHookEventArgs
     /// <summary>
     ///     Identifier of a window
     /// </summary>
-    public nint Handle { get; }
+    public HWND Hwnd { get; }
 }

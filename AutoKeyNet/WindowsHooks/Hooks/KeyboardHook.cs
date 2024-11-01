@@ -1,12 +1,13 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
+﻿using System.Runtime.InteropServices;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Windows.Win32.UI.WindowsAndMessaging;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
+using static Windows.Win32.PInvoke;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
+
 /// <summary>
 ///     Class for keyboard hooking
 /// </summary>
@@ -15,7 +16,7 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
     /// <summary>
     ///     Delegate for the callback function
     /// </summary>
-    private readonly HookCallbackDelegate _hookCallback;
+    private readonly HOOKPROC _hookCallback;
 
     /// <summary>
     ///     Constructor of the class for keyboard hooking
@@ -30,15 +31,10 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
     ///     Set of the keyboard hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected override nint SetHook()
+    protected override HHOOK SetHook()
     {
-        using var curProcess = Process.GetCurrentProcess();
-        using var curModule = curProcess.MainModule;
-        if (curModule != null)
-            return SetWindowsHookEx((int)HookType.WH_KEYBOARD_LL, _hookCallback, GetModuleHandle(curModule.ModuleName),
-                0);
-
-        throw new NullReferenceException();
+        var hMod = new HINSTANCE(Marshal.GetHINSTANCE(typeof(KeyboardHook).Module));
+        return SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, _hookCallback, hMod, 0);
     }
 
     /// <summary>
@@ -46,36 +42,39 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
     ///     To prevent sending a pressed key to the system, you need to set KeyboardHookEventArgs.Cancel to true
     /// </summary>
     /// <param name="nCode">A code the hook procedure uses to determine how to process the message</param>
-    /// <param name="wParam">The identifier of the keyboard message</param>
-    /// <param name="lParam">A pointer to a Windows API KBDLLHOOKSTRUCT structure</param>
+    /// <param name="wparam">The identifier of the keyboard message</param>
+    /// <param name="lparam">A pointer to a Windows API KBDLLHOOKSTRUCT structure</param>
     /// <returns>A code the hook procedure uses to determine how to process the message</returns>
     /// <exception cref="InvalidOperationException">
     ///     An exception occurs when there is an error in retrieving
     ///     the KeyboardLowLevelHook struct from the lParam parameter.
     /// </exception>
-    private nint LowLevelKeyboardProc(int nCode, nint wParam, nint lParam)
+    private LRESULT LowLevelKeyboardProc(int nCode, WPARAM wparam, LPARAM lparam)
     {
         if (nCode >= HC_ACTION)
         {
-            var kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(KeyboardLowLevelHook)) ??
-                                             throw new InvalidOperationException());
-            if (kbd.ExtraInfo != KEY_IGNORE)
+            var kbd = (KBDLLHOOKSTRUCT)(Marshal.PtrToStructure(lparam, typeof(KBDLLHOOKSTRUCT)) ??
+                                        throw new InvalidOperationException());
+            if (kbd.dwExtraInfo != KEY_IGNORE)
             {
-                Input input = new()
+                INPUT input = new()
                 {
-                    Type = InputType.INPUT_KEYBOARD,
-                    Data = new ()
+                    type = INPUT_TYPE.INPUT_KEYBOARD,
+                    Anonymous = new INPUT._Anonymous_e__Union
                     {
-                        KeyboardInput = new()
+                        ki = new KEYBDINPUT
                         {
-                            VirtualKey = (ushort)kbd.VirtualKey,
-                            ScanCode = (ushort)kbd.ScanCode,
-                            Time = (int)kbd.Time,
-                            ExtraInfo = kbd.ExtraInfo,
-                            Flags = (wParam == (uint)KeyboardMessage.WM_KEYDOWN || wParam == (uint)KeyboardMessage.WM_SYSKEYDOWN)? KeyEventFlags.KEYDOWN : KeyEventFlags.KEYUP
+                            wVk = (VIRTUAL_KEY)kbd.vkCode,
+                            wScan = (ushort)kbd.scanCode,
+                            time = kbd.time,
+                            dwExtraInfo = kbd.dwExtraInfo,
+                            dwFlags = wparam == WM_KEYDOWN || wparam == WM_SYSKEYDOWN
+                                ? 0
+                                : KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP
                         }
                     }
                 };
+
                 var keyboardHookEventArgs = new HookEventArgs(input,
                     WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(), WindowHelper.GetActiveWindowModuleFileName(),
@@ -83,11 +82,11 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
 
                 OnHookEvent(keyboardHookEventArgs);
                 if (keyboardHookEventArgs.Cancel)
-                    return 1;
+                    return new LRESULT(1);
             }
         }
 
-        return CallNextHookEx(HookId, nCode, wParam, lParam);
+        return CallNextHookEx(HookId, nCode, wparam, lparam);
     }
 
 

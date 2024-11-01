@@ -1,4 +1,5 @@
-﻿using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+﻿using Windows.Win32.UI.WindowsAndMessaging;
+using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 
@@ -7,10 +8,13 @@ namespace AutoKeyNet.WindowsHooks.Hooks;
 /// </summary>
 internal abstract class BaseHook<TBaseEventArgs> : IDisposable where TBaseEventArgs : BaseHookEventArgs
 {
+    public const uint KEY_IGNORE = 0xFFC3D44F;
+    public const uint KEY_SUPRESS_NATIVE_BEHAVIOUR = 0xFFC3D450;
+
     /// <summary>
     ///     Identifier for the hook
     /// </summary>
-    protected nint HookId;
+    protected HHOOK HookId;
 
     /// <summary>
     ///     Disposes of the hook
@@ -47,7 +51,7 @@ internal abstract class BaseHook<TBaseEventArgs> : IDisposable where TBaseEventA
     ///     Set of the hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected abstract nint SetHook();
+    protected abstract HHOOK SetHook();
 
     /// <summary>
     ///     Remove of the hook

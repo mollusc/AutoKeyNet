@@ -1,4 +1,4 @@
-﻿using AutoKeyNet.WindowsHooks.WindowsStruct;
+﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
 
 namespace AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
@@ -15,7 +15,7 @@ internal class HookEventArgs : BaseHookEventArgs
     /// <param name="windowClass">Class of the foreground window</param>
     /// <param name="windowModule">Module name (file *.exe) of the foreground window</param>
     /// <param name="windowControl">Name of the focused control</param>
-    public HookEventArgs(Input input,
+    public HookEventArgs(INPUT input,
         string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
     {
         Input = input;
@@ -29,7 +29,7 @@ internal class HookEventArgs : BaseHookEventArgs
     /// <summary>
     /// Input from keyboard or mouse
     /// </summary>
-    public Input Input { get; set; }
+    public INPUT Input { get; set; }
 
     /// <summary>
     ///     Property to prevent sending pressed key to the system.

@@ -1,11 +1,11 @@
 ﻿using System.Diagnostics;
 using System.Runtime.InteropServices;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Windows.Win32.UI.WindowsAndMessaging;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
-
+using static Windows.Win32.PInvoke;
 namespace AutoKeyNet.WindowsHooks.Hooks;
 
 /// <summary>
@@ -16,7 +16,7 @@ internal class MouseHook : BaseHook<HookEventArgs>
     /// <summary>
     ///     Delegate for the callback function
     /// </summary>
-    private readonly HookCallbackDelegate _hookCallback;
+    private readonly HOOKPROC _hookCallback;
 
     /// <summary>
     ///     Constructor of the class for keyboard hooking
@@ -31,13 +31,10 @@ internal class MouseHook : BaseHook<HookEventArgs>
     ///     Set of the mouse hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected override nint SetHook()
+    protected override HHOOK SetHook()
     {
-        using var curProcess = Process.GetCurrentProcess();
-        using var curModule = curProcess.MainModule;
-        if (curModule != null)
-            return SetWindowsHookEx((int)HookType.WH_MOUSE_LL, _hookCallback, GetModuleHandle(curModule.ModuleName), 0);
-        throw new NullReferenceException();
+        var hMod = new HINSTANCE(Marshal.GetHINSTANCE(typeof(KeyboardHook).Module));
+        return SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, _hookCallback, hMod, 0);
     }
 
     /// <summary>
@@ -45,24 +42,24 @@ internal class MouseHook : BaseHook<HookEventArgs>
     ///     To prevent sending a mouse event to the system, you need to set MouseHookEventArgs.Cancel to true
     /// </summary>
     /// <param name="nCode">A code the hook procedure uses to determine how to process the message</param>
-    /// <param name="wParam">The identifier of the mouse message</param>
-    /// <param name="lParam">A pointer to an Windows API MSLLHOOKSTRUCT structure</param>
+    /// <param name="wparam">The identifier of the mouse message</param>
+    /// <param name="lparam">A pointer to an Windows API MSLLHOOKSTRUCT structure</param>
     /// <returns>A code the hook procedure uses to determine how to process the message</returns>
     /// <exception cref="InvalidOperationException">
     ///     An exception occurs when there is an error in retrieving
     ///     the MouseLowLevelHook struct from the lParam parameter.
     /// </exception>
-    private nint LowLevelMouseProc(int nCode, nint wParam, nint lParam)
+    private LRESULT LowLevelMouseProc(int nCode, WPARAM wparam, LPARAM lparam)
     {
         if (nCode >= HC_ACTION)
         {
-            var hookStruct = (MouseLowLevelHook)(Marshal.PtrToStructure(lParam, typeof(MouseLowLevelHook)) ??
-                                                 throw new InvalidOperationException());
-            if (hookStruct.ExtraInfo != KEY_IGNORE)
+            var hookStruct = (MSLLHOOKSTRUCT)(Marshal.PtrToStructure(lparam, typeof(MSLLHOOKSTRUCT)) ??
+                                              throw new InvalidOperationException());
+            if (hookStruct.dwExtraInfo != KEY_IGNORE)
             {
-                MouseEvents mouseEvent = wParam switch
+                MouseEvents mouseEvent = wparam switch
                 {
-                    (nint)MouseMessage.WM_LBUTTONUP => MouseEvents.LEFTUP,
+                    WM_LBUTTONUP => MouseEvents.LEFTUP,
                     (nint)MouseMessage.WM_LBUTTONDOWN => MouseEvents.LEFTDOWN,
                     (nint)MouseMessage.WM_RBUTTONUP => MouseEvents.RIGHTUP,
                     (nint)MouseMessage.WM_RBUTTONDOWN => MouseEvents.RIGHTDOWN,
@@ -75,22 +72,32 @@ internal class MouseHook : BaseHook<HookEventArgs>
                     _ => 0
                 };
 
-                Input input = new()
+                INPUT input = new()
                 {
-                    Type = InputType.INPUT_MOUSE,
-                    Data = new ()
+                    type = INPUT_TYPE.INPUT_MOUSE,
+                    Anonymous = new INPUT._Anonymous_e__Union
                     {
-                        MouseInput = new()
+                        mi = new MOUSEINPUT
                         {
-                            Dx = hookStruct.Point.X,
-                            Dy = hookStruct.Point.Y,
-                            MouseData = hookStruct.MouseData,
-                            Flags = mouseEvent,
-                            Time = (uint)hookStruct.Time,
-                            ExtraInfo = hookStruct.ExtraInfo,
+                            dx = hookStruct.Point.X
+
                         }
                     }
                 };
+                
+                //    = new ()
+                //    {
+                //        MouseInput = new()
+                //        {
+                //            Dx = hookStruct.Point.X,
+                //            Dy = hookStruct.Point.Y,
+                //            MouseData = hookStruct.MouseData,
+                //            Flags = mouseEvent,
+                //            Time = (uint)hookStruct.Time,
+                //            ExtraInfo = hookStruct.ExtraInfo,
+                //        }
+                //    }
+                //};
                 var mouseHookEventArgs = new HookEventArgs(input, WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(),
                     WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
@@ -101,7 +108,7 @@ internal class MouseHook : BaseHook<HookEventArgs>
             }
         }
 
-        return CallNextHookEx(HookId, nCode, wParam, lParam);
+        return CallNextHookEx(HookId, nCode, wparam, lparam);
     }
 
     /// <summary>
