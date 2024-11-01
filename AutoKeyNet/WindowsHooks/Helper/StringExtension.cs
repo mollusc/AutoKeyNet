@@ -1,8 +1,4 @@
-﻿using AutoKeyNet.WindowsHooks.WinApi;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-
-namespace AutoKeyNet.WindowsHooks.Helper;
+﻿namespace AutoKeyNet.WindowsHooks.Helper;
 
 /// <summary>
 ///     Extension methods for the string data type.

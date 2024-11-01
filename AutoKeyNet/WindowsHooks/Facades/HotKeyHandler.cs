@@ -1,12 +1,11 @@
 ﻿using System.Diagnostics;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Hooks;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.Rule;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
 using Microsoft.VisualStudio.Services.Common;
-using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
+using static Windows.Win32.PInvoke;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
 
@@ -18,7 +17,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <summary>
     /// Buffer for inputs from keyboard or mouse
     /// </summary>
-    private readonly Buffer<Input> _buffer;
+    private readonly Buffer<INPUT> _buffer;
 
     /// <summary>
     ///     Keyboard hook
@@ -33,12 +32,12 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// <summary>
     ///     A list of pressed keys
     /// </summary>
-    private readonly List<Input> _pressedKeys = new();
+    private readonly List<INPUT> _pressedKeys = new();
 
     /// <summary>
     ///     A list of prefix keys from rules used to suppress key behavior.
     /// </summary>
-    private readonly List<List<Input>> _suppressedKeys = new();
+    private readonly List<List<INPUT>> _suppressedKeys = new();
 
     /// <summary>
     ///     Constructor of the class for handling hotkeys
@@ -49,7 +48,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     public HotKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook) : base(rules)
     {
         var bufferSize = Rules.Max(r => r.KeyInputs.Length);
-        _buffer = new Buffer<Input>(bufferSize);
+        _buffer = new Buffer<INPUT>(bufferSize);
 
         InitializeListOfSuppressedKeys();
 
@@ -78,10 +77,10 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             {
                 for (var i = 0; i < rule.KeyInputs.Length; i++)
                 {
-                    if (rule.KeyInputs[i].Data.KeyboardInput.ExtraInfo != KEY_SUPRESS_NATIVE_BEHAVIOUR)
+                    if (rule.KeyInputs[i].Anonymous.ki.dwExtraInfo != Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                         continue;
 
-                    var inputs = new List<Input>();
+                    var inputs = new List<INPUT>();
                     for (var j = 0; j <= i; j++)
                         inputs.Add(rule.KeyInputs[j]);
 
@@ -103,7 +102,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     }
 
 
-    private bool ProcessKey(Input input, string? eWindowTitle, string? eWindowClass, string? eWindowModule,
+    private bool ProcessKey(INPUT input, string? eWindowTitle, string? eWindowClass, string? eWindowModule,
         string? eWindowControl)
     {
         var cancelNativeBehavior = true;
@@ -119,7 +118,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         }
         else if (_pressedKeys.Any())
         {
-            SendInputAsync(_pressedKeys.ToArray()).ConfigureAwait(false);
+            SendInput(_pressedKeys.ToArray().AsSpan(), _pressedKeys.Count);
             _pressedKeys.Clear();
             cancelNativeBehavior = true;
         }
@@ -141,24 +140,24 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
     /// </summary>
     /// <param name="i"></param>
     /// <returns></returns>
-    private bool FilterInput(Input i)
+    private bool FilterInput(INPUT i)
     {
-        if (i.Type == InputType.INPUT_KEYBOARD)
+        if (i.type == INPUT_TYPE.INPUT_KEYBOARD)
             return true;
-        if (i.Type == InputType.INPUT_MOUSE)
+        if (i.type == INPUT_TYPE.INPUT_MOUSE)
         {
-            var eventsToDisplay = new HashSet<MouseEvents>
+            var eventsToDisplay = new HashSet<MOUSE_EVENT_FLAGS>
             {
-                MouseEvents.LEFTUP,
-                MouseEvents.LEFTDOWN,
-                MouseEvents.RIGHTUP,
-                MouseEvents.RIGHTDOWN,
-                MouseEvents.MIDDLEDOWN,
-                MouseEvents.MIDDLEUP,
-                MouseEvents.XDOWN,
-                MouseEvents.XUP
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN,
+                MOUSE_EVENT_FLAGS.MOUSEEVENTF_XUP
             };
-            return eventsToDisplay.Contains(i.Data.MouseInput.Flags);
+            return eventsToDisplay.Contains(i.Anonymous.mi.dwFlags);
         }
 
         return false;

@@ -1,6 +1,4 @@
-using AutoKeyNet.WindowsHooks.WinApi;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
@@ -16,19 +14,19 @@ internal static class CharExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>An Input structure that represents the letter</returns>
-    internal static Input ToInput(this char letter, KeyEventFlags flags, nuint extraInfo = NativeMethods.KEY_IGNORE)
+    internal static INPUT ToInput(this char letter, KEYBD_EVENT_FLAGS flags, nuint extraInfo = Constants.KEY_IGNORE)
     {
-        return new Input
+        return new INPUT
         {
-            Type = InputType.INPUT_KEYBOARD,
-            Data = new InputUnion
+            type = INPUT_TYPE.INPUT_KEYBOARD,
+            Anonymous = new ()
             {
-                KeyboardInput = new KeyboardInput
+                ki = new ()
                 {
-                    VirtualKey = 0,
-                    ScanCode = letter,
-                    Flags = KeyEventFlags.UNICODE | flags,
-                    ExtraInfo = extraInfo
+                    wVk = 0,
+                    wScan = letter,
+                    dwFlags = KEYBD_EVENT_FLAGS.KEYEVENTF_UNICODE | flags,
+                    dwExtraInfo = extraInfo
                 }
             }
         };
@@ -41,10 +39,10 @@ internal static class CharExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>Input structures that represent the letter</returns>
-    internal static IEnumerable<Input> ToInputsPressKey(this char letter, KeyEventFlags flags = 0,
-        nuint extraInfo = NativeMethods.KEY_IGNORE)
+    internal static IEnumerable<INPUT> ToInputsPressKey(this char letter, KEYBD_EVENT_FLAGS flags = 0,
+        nuint extraInfo = Constants.KEY_IGNORE)
     {
-        foreach (var extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
+        foreach (var extraFlag in new[] { (KEYBD_EVENT_FLAGS)0, KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP })
             yield return letter.ToInput(flags | extraFlag, extraInfo);
     }
 }

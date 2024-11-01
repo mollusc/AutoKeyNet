@@ -1,30 +1,29 @@
-﻿using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
+﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
+using static Windows.Win32.PInvoke;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
-public class InputComparerByVKeyAndFlag : IEqualityComparer<Input>
+public class InputComparerByVKeyAndFlag : IEqualityComparer<INPUT>
 {
-    public bool Equals(Input x, Input y)
+    bool IEqualityComparer<INPUT>.Equals(INPUT x, INPUT y)
     {
-        return x.Type == y.Type
+        return x.type == y.type
                && (
-                   (x.Type == InputType.INPUT_KEYBOARD && x.Data.KeyboardInput.VirtualKey ==
-                                                       y.Data.KeyboardInput.VirtualKey
-                                                       && x.Data.KeyboardInput.Flags == y.Data.KeyboardInput.Flags)
-                   || (x.Type == InputType.INPUT_MOUSE && x.Data.MouseInput.Flags == y.Data.MouseInput.Flags
-                                                       && x.Data.MouseInput.MouseData >> 16 ==
-                                                       y.Data.MouseInput.MouseData >> 16));
+                   (x.type == INPUT_TYPE.INPUT_KEYBOARD && x.Anonymous.ki.wVk == y.Anonymous.ki.wVk
+                                                            && x.Anonymous.ki.dwFlags == y.Anonymous.ki.dwFlags)
+                   || (x.type == INPUT_TYPE.INPUT_MOUSE && x.Anonymous.mi.dwFlags == y.Anonymous.mi.dwFlags
+                                                            && x.Anonymous.mi.mouseData >> 16 ==
+                                                            y.Anonymous.mi.mouseData >> 16));
     }
 
-    public int GetHashCode(Input obj)
+    int IEqualityComparer<INPUT>.GetHashCode(INPUT obj)
     {
-        return HashCode.Combine((int)obj.Type,
-            obj.Type == InputType.INPUT_KEYBOARD
-                ? obj.Data.KeyboardInput.VirtualKey
-                : (ushort)obj.Data.MouseInput.Flags,
-            obj.Type == InputType.INPUT_KEYBOARD
-                ? (int)obj.Data.KeyboardInput.Flags
-                : obj.Data.MouseInput.MouseData >> 16);
+        return HashCode.Combine(obj.type,
+            obj.type == INPUT_TYPE.INPUT_KEYBOARD
+                ? (uint)obj.Anonymous.ki.wVk
+                : (uint)obj.Anonymous.mi.dwFlags,
+            obj.type == INPUT_TYPE.INPUT_MOUSE
+                ? (uint)obj.Anonymous.ki.dwFlags
+                : (uint)obj.Anonymous.mi.mouseData >> 16);
     }
 }

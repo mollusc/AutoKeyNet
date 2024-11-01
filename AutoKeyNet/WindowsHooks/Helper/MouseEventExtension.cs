@@ -1,8 +1,4 @@
-﻿using AutoKeyNet.WindowsHooks.WinApi;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-
-namespace AutoKeyNet.WindowsHooks.Helper;
+﻿namespace AutoKeyNet.WindowsHooks.Helper;
 
 public static class MouseEventExtension
 {

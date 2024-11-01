@@ -30,7 +30,7 @@ internal class WinHook : BaseHook<WinBaseHookEventArgs>
     ///     Set of the Windows hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected override HHOOK SetHook()
+    protected override nint SetHook()
     {
         return SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, HMODULE.Null, 
             _hookEvent, 0, 0, WINEVENT_OUTOFCONTEXT);
@@ -57,5 +57,5 @@ internal class WinHook : BaseHook<WinBaseHookEventArgs>
     /// <summary>
     ///     Remove of the Windows hook
     /// </summary>
-    protected override void Unhook() => UnhookWinEvent(HookId);
+    protected override void Unhook() => UnhookWinEvent(new HWINEVENTHOOK(HookId));
 }

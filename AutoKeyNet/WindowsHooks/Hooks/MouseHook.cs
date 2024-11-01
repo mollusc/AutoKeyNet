@@ -31,10 +31,20 @@ internal class MouseHook : BaseHook<HookEventArgs>
     ///     Set of the mouse hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected override HHOOK SetHook()
+    protected override IntPtr SetHook()
     {
-        var hMod = new HINSTANCE(Marshal.GetHINSTANCE(typeof(KeyboardHook).Module));
-        return SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, _hookCallback, hMod, 0);
+        using Process curProcess = Process.GetCurrentProcess();
+        using ProcessModule? curModule = curProcess.MainModule;
+        using var hMode = GetModuleHandle(curModule?.ModuleName);
+        var hModePtr = new HINSTANCE(hMode.DangerousGetHandle());
+        var hookHandle = SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, _hookCallback, hModePtr, 0);
+
+        if (hookHandle == IntPtr.Zero)
+        {
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        }
+
+        return hookHandle;
     }
 
     /// <summary>
@@ -55,20 +65,20 @@ internal class MouseHook : BaseHook<HookEventArgs>
         {
             var hookStruct = (MSLLHOOKSTRUCT)(Marshal.PtrToStructure(lparam, typeof(MSLLHOOKSTRUCT)) ??
                                               throw new InvalidOperationException());
-            if (hookStruct.dwExtraInfo != KEY_IGNORE)
+            if (hookStruct.dwExtraInfo != Constants.KEY_IGNORE)
             {
-                MouseEvents mouseEvent = wparam switch
+                MOUSE_EVENT_FLAGS mouseEventFlags = (uint)wparam switch
                 {
-                    WM_LBUTTONUP => MouseEvents.LEFTUP,
-                    (nint)MouseMessage.WM_LBUTTONDOWN => MouseEvents.LEFTDOWN,
-                    (nint)MouseMessage.WM_RBUTTONUP => MouseEvents.RIGHTUP,
-                    (nint)MouseMessage.WM_RBUTTONDOWN => MouseEvents.RIGHTDOWN,
-                    (nint)MouseMessage.WM_MBUTTONUP => MouseEvents.MIDDLEUP,
-                    (nint)MouseMessage.WM_MBUTTONDOWN => MouseEvents.MIDDLEDOWN,
-                    (nint)MouseMessage.WM_XBUTTONUP => MouseEvents.XUP,
-                    (nint)MouseMessage.WM_XBUTTONDOWN => MouseEvents.XDOWN,
-                    (nint)MouseMessage.WM_MOUSEMOVE => MouseEvents.MOVE,
-                    (nint)MouseMessage.WM_MOUSEWHEEL => MouseEvents.WHEEL,
+                    WM_LBUTTONUP => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+                    WM_LBUTTONDOWN => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+                    WM_RBUTTONUP => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+                    WM_RBUTTONDOWN => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+                    WM_MBUTTONUP => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+                    WM_MBUTTONDOWN => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+                    WM_XBUTTONUP => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XUP,
+                    WM_XBUTTONDOWN => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN,
+                    WM_MOUSEMOVE => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MOVE,
+                    WM_MOUSEWHEEL => MOUSE_EVENT_FLAGS.MOUSEEVENTF_WHEEL,
                     _ => 0
                 };
 
@@ -79,40 +89,30 @@ internal class MouseHook : BaseHook<HookEventArgs>
                     {
                         mi = new MOUSEINPUT
                         {
-                            dx = hookStruct.Point.X
-
+                            dx = hookStruct.pt.X,
+                            dy = hookStruct.pt.Y,
+                            dwExtraInfo = hookStruct.dwExtraInfo,
+                            time = hookStruct.time,
+                            dwFlags = mouseEventFlags,
+                            mouseData = hookStruct.mouseData
                         }
                     }
                 };
-                
-                //    = new ()
-                //    {
-                //        MouseInput = new()
-                //        {
-                //            Dx = hookStruct.Point.X,
-                //            Dy = hookStruct.Point.Y,
-                //            MouseData = hookStruct.MouseData,
-                //            Flags = mouseEvent,
-                //            Time = (uint)hookStruct.Time,
-                //            ExtraInfo = hookStruct.ExtraInfo,
-                //        }
-                //    }
-                //};
                 var mouseHookEventArgs = new HookEventArgs(input, WindowHelper.GetActiveWindowTitle(),
                     WindowHelper.GetActiveWindowClass(),
                     WindowHelper.GetActiveWindowModuleFileName(), WindowHelper.GetActiveWindowFocusControlName());
 
                 OnHookEvent(mouseHookEventArgs);
                 if (mouseHookEventArgs.Cancel)
-                    return 1;
+                    return new LRESULT(1);
             }
         }
 
-        return CallNextHookEx(HookId, nCode, wparam, lparam);
+        return CallNextHookEx((HHOOK)HookId, nCode, wparam, lparam);
     }
 
     /// <summary>
     ///     Remove of the mouse hook
     /// </summary>
-    protected override void Unhook() => UnhookWindowsHookEx(HookId);
+    protected override void Unhook() => UnhookWindowsHookEx((HHOOK)HookId);
 }

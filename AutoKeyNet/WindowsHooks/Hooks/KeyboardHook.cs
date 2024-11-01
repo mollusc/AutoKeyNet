@@ -1,4 +1,5 @@
-﻿using System.Runtime.InteropServices;
+﻿using System.Diagnostics;
+using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
@@ -31,10 +32,18 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
     ///     Set of the keyboard hook
     /// </summary>
     /// <returns>Identifier for the hook</returns>
-    protected override HHOOK SetHook()
+    protected override nint SetHook()
     {
-        var hMod = new HINSTANCE(Marshal.GetHINSTANCE(typeof(KeyboardHook).Module));
-        return SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, _hookCallback, hMod, 0);
+        using Process curProcess = Process.GetCurrentProcess();
+        using ProcessModule? curModule = curProcess.MainModule;
+        using var hMode = GetModuleHandle(curModule?.ModuleName);
+        var hModePtr = new HINSTANCE(hMode.DangerousGetHandle());
+        var hookHandle = SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, _hookCallback, hModePtr, 0);
+
+        if (hookHandle == HHOOK.Null)
+            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+
+        return hookHandle;
     }
 
     /// <summary>
@@ -55,7 +64,7 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
         {
             var kbd = (KBDLLHOOKSTRUCT)(Marshal.PtrToStructure(lparam, typeof(KBDLLHOOKSTRUCT)) ??
                                         throw new InvalidOperationException());
-            if (kbd.dwExtraInfo != KEY_IGNORE)
+            if (kbd.dwExtraInfo != Constants.KEY_IGNORE)
             {
                 INPUT input = new()
                 {
@@ -86,12 +95,12 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
             }
         }
 
-        return CallNextHookEx(HookId, nCode, wparam, lparam);
+        return CallNextHookEx((HHOOK)HookId, nCode, wparam, lparam);
     }
 
 
     /// <summary>
     ///     Remove of the keyboard hook
     /// </summary>
-    protected override void Unhook() => UnhookWindowsHookEx(HookId);
+    protected override void Unhook() => UnhookWindowsHookEx((HHOOK)HookId);
 }

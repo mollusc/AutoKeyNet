@@ -1,6 +1,5 @@
-﻿using AutoKeyNet.WindowsHooks.WinApi;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
+﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
+using static AutoKeyNet.WindowsHooks.Helper.Constants;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
@@ -11,7 +10,7 @@ internal static class InputExtension
     /// </summary>
     /// <param name="inputs">Inputs to convert</param>
     /// <returns>Virtual keys</returns>
-    public static IEnumerable<VirtualKey> ToVirtualKeys(this IEnumerable<Input> inputs) =>
+    public static IEnumerable<VIRTUAL_KEY> ToVirtualKeys(this IEnumerable<INPUT> inputs) =>
         inputs.Select(i => i.ToVirtualKey());
 
     /// <summary>
@@ -19,22 +18,22 @@ internal static class InputExtension
     /// </summary>
     /// <param name="input">Input to convert</param>
     /// <returns>A virtual key</returns>
-    public static VirtualKey ToVirtualKey(this Input input) =>
-        input.Type == InputType.INPUT_KEYBOARD ? (VirtualKey)input.Data.KeyboardInput.VirtualKey : input.Data.MouseInput.ToVirtualKey();
+    public static VIRTUAL_KEY ToVirtualKey(this INPUT input) =>
+        input.type == INPUT_TYPE.INPUT_KEYBOARD ? input.Anonymous.ki.wVk : input.Anonymous.mi.ToVirtualKey();
 
     /// <summary>
     ///     Converts mouse input to a virtual key.
     /// </summary>
     /// <param name="uMi">Mouse input to convert</param>
     /// <returns>A virtual key</returns>
-    public static VirtualKey ToVirtualKey(this MouseInput uMi) =>
-        uMi.Flags switch
+    public static VIRTUAL_KEY ToVirtualKey(this MOUSEINPUT uMi) =>
+        uMi.dwFlags switch
         {
-            MouseEvents.LEFTDOWN => VirtualKey.LBUTTON,
-            MouseEvents.RIGHTDOWN => VirtualKey.RBUTTON,
-            MouseEvents.MIDDLEDOWN => VirtualKey.MBUTTON,
-            MouseEvents.XDOWN when (uMi.MouseData & NativeMethods.XBUTTON1) == NativeMethods.XBUTTON1 => VirtualKey.XBUTTON1,
-            MouseEvents.XDOWN when (uMi.MouseData & NativeMethods.XBUTTON2) == NativeMethods.XBUTTON2 => VirtualKey.XBUTTON2,
+            MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN => VIRTUAL_KEY.VK_LBUTTON,
+            MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN => VIRTUAL_KEY.VK_RBUTTON,
+            MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN => VIRTUAL_KEY.VK_MBUTTON,
+            MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN when (uMi.mouseData & XBUTTON1) == XBUTTON1 => VIRTUAL_KEY.VK_XBUTTON1,
+            MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN when (uMi.mouseData & XBUTTON2) == XBUTTON2 => VIRTUAL_KEY.VK_XBUTTON1,
             _ => 0
         };
 }

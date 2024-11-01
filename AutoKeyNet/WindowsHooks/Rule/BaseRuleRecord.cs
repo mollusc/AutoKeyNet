@@ -1,5 +1,5 @@
+using Windows.Win32.UI.Input.KeyboardAndMouse;
 using AutoKeyNet.WindowsHooks.Helper;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
 
 namespace AutoKeyNet.WindowsHooks.Rule;
 
@@ -32,7 +32,7 @@ public class BaseRuleRecord
     /// <summary>
     ///     Array of Inputs struct for the rule that triggers the rule's action (Run).
     /// </summary>
-    internal Input[] KeyInputs { get; }
+    internal INPUT[] KeyInputs { get; }
 
     /// <summary>
     ///     Action that is triggered when the rule is fired.
@@ -50,11 +50,11 @@ public class BaseRuleRecord
     {
     }
 
-    protected BaseRuleRecord(Input[] hotKeys, Action run, WindowCondition? checkWindowCondition) :
-        this(hotKeys.ToArray(), string.Join(" ", hotKeys.Select(h => $"[{h.ToString()}]")), run, checkWindowCondition)
+    protected BaseRuleRecord(INPUT[] hotKeys, Action run, WindowCondition? checkWindowCondition) :
+        this(hotKeys, string.Join(" ", hotKeys.Select(h => $"[{h.ToString()}]")), run, checkWindowCondition)
     {
     }
-    private BaseRuleRecord(Input[] keyInputs, string keyText, Action run, WindowCondition? checkWindowCondition)
+    private BaseRuleRecord(INPUT[] keyInputs, string keyText, Action run, WindowCondition? checkWindowCondition)
     {
         KeyInputs = keyInputs;
         KeyText = keyText;
