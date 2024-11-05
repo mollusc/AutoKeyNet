@@ -45,10 +45,10 @@ public class BaseRuleRecord
     /// <param name="keyText">Text of the rule that triggers the rule's action (Run).</param>
     /// <param name="run">Action that is triggered when the rule is fired.</param>
     /// <param name="checkWindowCondition">Check the rule of the current window or control.</param>
-    protected BaseRuleRecord(string keyText, Action run, WindowCondition? checkWindowCondition) :
-        this(keyText.ToInputs().ToArray(), keyText, run, checkWindowCondition)
-    {
-    }
+    //protected BaseRuleRecord(string keyText, Action run, WindowCondition? checkWindowCondition) :
+    //    this(keyText.ToInputs().ToArray(), keyText, run, checkWindowCondition)
+    //{
+    //}
 
     protected BaseRuleRecord(INPUT[] hotKeys, Action run, WindowCondition? checkWindowCondition) :
         this(hotKeys, string.Join(" ", hotKeys.Select(h => $"[{h.ToString()}]")), run, checkWindowCondition)

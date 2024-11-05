@@ -10,23 +10,23 @@ internal static class InputExtension
     /// </summary>
     /// <param name="inputs">Inputs to convert</param>
     /// <returns>Virtual keys</returns>
-    public static IEnumerable<VIRTUAL_KEY> ToVirtualKeys(this IEnumerable<INPUT> inputs) =>
-        inputs.Select(i => i.ToVirtualKey());
+    public static IEnumerable<VIRTUAL_KEY> ToVIRTUAL_KEYs(this IEnumerable<INPUT> inputs) =>
+        inputs.Select(i => i.ToVIRTUAL_KEY());
 
     /// <summary>
     ///     Converts keyboard input and mouse input to a virtual key.
     /// </summary>
     /// <param name="input">Input to convert</param>
     /// <returns>A virtual key</returns>
-    public static VIRTUAL_KEY ToVirtualKey(this INPUT input) =>
-        input.type == INPUT_TYPE.INPUT_KEYBOARD ? input.Anonymous.ki.wVk : input.Anonymous.mi.ToVirtualKey();
+    public static VIRTUAL_KEY ToVIRTUAL_KEY(this INPUT input) =>
+        input.type == INPUT_TYPE.INPUT_KEYBOARD ? input.Anonymous.ki.wVk : input.Anonymous.mi.ToVIRTUAL_KEY();
 
     /// <summary>
     ///     Converts mouse input to a virtual key.
     /// </summary>
     /// <param name="uMi">Mouse input to convert</param>
     /// <returns>A virtual key</returns>
-    public static VIRTUAL_KEY ToVirtualKey(this MOUSEINPUT uMi) =>
+    public static VIRTUAL_KEY ToVIRTUAL_KEY(this MOUSEINPUT uMi) =>
         uMi.dwFlags switch
         {
             MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN => VIRTUAL_KEY.VK_LBUTTON,

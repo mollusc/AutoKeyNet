@@ -6,6 +6,7 @@ using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using AutoKeyNet.WindowsHooks.Rule;
 using Microsoft.VisualStudio.Services.Common;
 using static Windows.Win32.PInvoke;
+using System.Runtime.InteropServices;
 
 namespace AutoKeyNet.WindowsHooks.Facades;
 
@@ -118,7 +119,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         }
         else if (_pressedKeys.Any())
         {
-            SendInput(_pressedKeys.ToArray().AsSpan(), _pressedKeys.Count);
+            SendInput(_pressedKeys.ToArray().AsSpan(), Marshal.SizeOf(typeof(INPUT)));
             _pressedKeys.Clear();
             cancelNativeBehavior = true;
         }

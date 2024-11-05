@@ -23,12 +23,12 @@
 //    /// </summary>
 //    private readonly HashSet<ushort> _clearBufferKey = new()
 //    {
-//        (ushort)VirtualKey.RIGHT,
-//        (ushort)VirtualKey.LEFT,
-//        (ushort)VirtualKey.UP,
-//        (ushort)VirtualKey.DOWN,
-//        (ushort)VirtualKey.END,
-//        (ushort)VirtualKey.HOME
+//        (ushort)VIRTUAL_KEY.RIGHT,
+//        (ushort)VIRTUAL_KEY.LEFT,
+//        (ushort)VIRTUAL_KEY.UP,
+//        (ushort)VIRTUAL_KEY.DOWN,
+//        (ushort)VIRTUAL_KEY.END,
+//        (ushort)VIRTUAL_KEY.HOME
 //    };
 
 //    /// <summary>
@@ -127,7 +127,7 @@
 //            var kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
 //                                             throw new InvalidOperationException());
 //            // Clear the buffer
-//            if (_clearBufferKey.Contains((ushort)kbd.VirtualKey))
+//            if (_clearBufferKey.Contains((ushort)kbd.VIRTUAL_KEY))
 //            {
 //                _buffer = string.Empty;
 //                return;

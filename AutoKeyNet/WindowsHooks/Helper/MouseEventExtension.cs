@@ -1,26 +1,28 @@
-﻿namespace AutoKeyNet.WindowsHooks.Helper;
+﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
+
+namespace AutoKeyNet.WindowsHooks.Helper;
 
 public static class MouseEventExtension
 {
     /// <summary>
-    ///     Convert MouseEvents to Input
+    ///     Convert MOUSE_EVENT_FLAGS to Input
     /// </summary>
     /// <param name="mouseEvent">Mouse event</param>
     /// <param name="mouseData">Additional parameter for a mouse message used to detect the XBUTTON1 or XBUTTON2 keys.</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>Input that represents mouse event</returns>
-    public static Input ToInput(this MouseEvents mouseEvent, uint mouseData = 0,
-        nuint extraInfo = NativeMethods.KEY_IGNORE) =>
+    public static INPUT ToInput(this MOUSE_EVENT_FLAGS mouseEvent, uint mouseData = 0,
+        nuint extraInfo = Constants.KEY_IGNORE) =>
         new()
         {
-            Type = InputType.INPUT_MOUSE,
-            Data = new InputUnion
+            type = INPUT_TYPE.INPUT_MOUSE,
+            Anonymous = new ()
             {
-                MouseInput = new MouseInput
+                mi = new ()
                 {
-                    Flags = mouseEvent,
-                    MouseData = (int)mouseData,
-                    ExtraInfo = extraInfo
+                    dwFlags = mouseEvent,
+                    mouseData = mouseData,
+                    dwExtraInfo = extraInfo
                 }
             }
         };

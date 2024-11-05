@@ -1,7 +1,9 @@
+using System.Runtime.InteropServices;
 using System.Text;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
-using AutoKeyNet.WindowsHooks.WindowsStruct;
-using static AutoKeyNet.WindowsHooks.WinApi.NativeMethods;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using Windows.Win32.UI.TextServices;
+using static Windows.Win32.PInvoke;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
@@ -11,28 +13,28 @@ namespace AutoKeyNet.WindowsHooks.Helper;
 public static class VirtualKeyExtension
 {
     /// <summary>
-    ///     Method for converting a virtual key to an Input structure with a key down event
+    ///     Method for converting a virtual key to an Input structure with a key down event by default
     /// </summary>
     /// <param name="virtualKey">The virtual key that will be converted into an Input structure</param>
-    /// <param name="flags">Specifies various aspects of a keystroke</param>
+    /// <param name="flags">Specifies various aspects of a keystroke. Default is key down.</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>An Input structure that represents the virtual key</returns>
-    public static Input ToInput(this VirtualKey virtualKey, KeyEventFlags flags,
-        nuint extraInfo = KEY_IGNORE) =>
+    public static INPUT ToInput(this VIRTUAL_KEY virtualKey, KEYBD_EVENT_FLAGS flags = 0,
+        nuint extraInfo = Constants.KEY_IGNORE) =>
     virtualKey switch
     {
-        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.LEFTUP.ToInput(),
-        VirtualKey.LBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.LEFTDOWN.ToInput(),
-        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.RIGHTUP.ToInput(),
-        VirtualKey.RBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.RIGHTDOWN.ToInput(),
-        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.MIDDLEUP.ToInput(),
-        VirtualKey.MBUTTON when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.MIDDLEDOWN.ToInput(),
-        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON1),
-        VirtualKey.XBUTTON1 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON1),
-        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYUP) => MouseEvents.XUP.ToInput(XBUTTON2),
-        VirtualKey.XBUTTON2 when flags.HasFlag(KeyEventFlags.KEYDOWN) => MouseEvents.XDOWN.ToInput(XBUTTON2),
+        VIRTUAL_KEY.VK_LBUTTON when flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP.ToInput(),
+        VIRTUAL_KEY.VK_LBUTTON when !flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN.ToInput(),
+        VIRTUAL_KEY.VK_RBUTTON when flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP.ToInput(),
+        VIRTUAL_KEY.VK_RBUTTON when !flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN.ToInput(),
+        VIRTUAL_KEY.VK_MBUTTON when flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP.ToInput(),
+        VIRTUAL_KEY.VK_MBUTTON when !flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN.ToInput(),
+        VIRTUAL_KEY.VK_XBUTTON1 when flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XUP.ToInput(Constants.XBUTTON1),
+        VIRTUAL_KEY.VK_XBUTTON1 when !flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN.ToInput(Constants.XBUTTON1),
+        VIRTUAL_KEY.VK_XBUTTON2 when flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XUP.ToInput(Constants.XBUTTON2),
+        VIRTUAL_KEY.VK_XBUTTON2 when !flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN.ToInput(Constants.XBUTTON2),
 
-        _ => GetKeyboardInput(virtualKey, flags, extraInfo)
+        _ => GetKeyboardInput(virtualKey, flags, extraInfo) 
     };
 
     /// <summary>
@@ -42,18 +44,18 @@ public static class VirtualKeyExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>A keyboard Input structure that represents the virtual key</returns>
-    private static Input GetKeyboardInput(VirtualKey virtualKey, KeyEventFlags flags, nuint extraInfo) =>
+    private static INPUT GetKeyboardInput(VIRTUAL_KEY virtualKey, KEYBD_EVENT_FLAGS flags, nuint extraInfo) =>
         new()
         {
-            Type = InputType.INPUT_KEYBOARD,
-            Data = new InputUnion
+            type = INPUT_TYPE.INPUT_KEYBOARD,
+            Anonymous = new ()
             {
-                KeyboardInput = new KeyboardInput
+                ki = new ()
                 {
-                    VirtualKey = (ushort)virtualKey,
-                    ScanCode = (ushort)MapVirtualKey((uint)virtualKey, MAPVK_VK_TO_VSC),
-                    Flags = flags,
-                    ExtraInfo = extraInfo
+                    wVk = virtualKey,
+                    wScan = (ushort)MapVirtualKey((uint)virtualKey, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC),
+                    dwFlags = flags,
+                    dwExtraInfo = extraInfo
                 }
             }
         };
@@ -65,10 +67,10 @@ public static class VirtualKeyExtension
     /// <param name="flags">Specifies various aspects of a keystroke</param>
     /// <param name="extraInfo">An additional value associated with the keystroke</param>
     /// <returns>Input structures that represent the virtual key</returns>
-    public static IEnumerable<Input> ToInputsPressKey(this VirtualKey virtualKey, KeyEventFlags flags = 0,
-        nuint extraInfo = KEY_IGNORE)
+    public static IEnumerable<INPUT> ToInputsPressKey(this VIRTUAL_KEY virtualKey, KEYBD_EVENT_FLAGS flags = 0,
+        nuint extraInfo = Constants.KEY_IGNORE)
     {
-        foreach (var extraFlag in new[] { KeyEventFlags.KEYDOWN, KeyEventFlags.KEYUP })
+        foreach (var extraFlag in new[] { (KEYBD_EVENT_FLAGS)0, KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP })
             yield return virtualKey.ToInput(flags | extraFlag, extraInfo);
     }
 
@@ -83,26 +85,46 @@ public static class VirtualKeyExtension
     ///     account the current language keyboard layout
     /// </param>
     /// <returns>Unicode character</returns>
-    public static char ToUnicode(this VirtualKey vkCode, bool isInvariantCulture = false)
-    {
-        var sbString = new StringBuilder();
+    //public static unsafe char ToUnicode(VIRTUAL_KEY vkCode, bool isInvariantCulture = false)
+    //{
+    //    var sbString = new StringBuilder(5);
+    //    var bKeyState = new byte[256];
+    //    GetKeyState((int)VIRTUAL_KEY.VK_SHIFT);
+    //    GetKeyState((int)VIRTUAL_KEY.VK_MENU);
+    //    var bKeyStateStatus = GetKeyboardState(bKeyState);
+    //    if (!bKeyStateStatus)
+    //        return '\0';
 
-        var bKeyState = new byte[256];
-        GetKeyState(VirtualKey.SHIFT);
-        GetKeyState(VirtualKey.MENU);
-        var bKeyStateStatus = GetKeyboardState(bKeyState);
-        if (!bKeyStateStatus)
-            return '\0';
-        var hkl = nint.Zero;
-        var lScanCode = MapVirtualKey((uint)vkCode, MAPVK_VK_TO_VSC);
-        if (!isInvariantCulture)
-        {
-            var focusedHWnd = GetForegroundWindow();
-            var activeThread = GetWindowThreadProcessId(focusedHWnd, out var processId);
-            hkl = GetKeyboardLayout(activeThread);
-        }
+    //    var hkl = new HKL(IntPtr.Zero);
+    //    var lScanCode = MapVirtualKey((uint)vkCode, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC);
+    //    if (!isInvariantCulture)
+    //    {
+    //        var focusedHWnd = GetForegroundWindow();
+    //        var activeThread = GetWindowThreadProcessId(focusedHWnd);
+    //        hkl = GetKeyboardLayout(activeThread);
+    //    }
 
-        ToUnicodeEx(vkCode, lScanCode, bKeyState, sbString, 5, 0, hkl);
-        return sbString.Length > 0 ? sbString[0] : '\0';
-    }
+    //    // Allocate unmanaged memory for PWSTR
+    //    IntPtr pwstr = Marshal.AllocHGlobal(5 * sizeof(char));
+    //    try
+    //    {
+    //        var pwszBuff = new PWSTR((char*)pwstr);
+
+    //        int result = ToUnicodeEx((uint)vkCode, lScanCode, bKeyState.AsSpan(), pwszBuff, 5, 0, hkl);
+    //        if (result > 0)
+    //        {
+    //            // Marshal the result back to a managed string
+    //            string resultString = Marshal.PtrToStringUni(pwstr);
+    //            return resultString[0];
+    //        }
+    //        else
+    //        {
+    //            return '\0';
+    //        }
+    //    }
+    //    finally
+    //    {
+    //        Marshal.FreeHGlobal(pwstr);
+    //    }
+    //}
 }

@@ -1,7 +1,11 @@
 ﻿using System.ComponentModel;
 using System.Diagnostics;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using System.Text;
+using Windows.Win32.Foundation;
+using Windows.Win32.UI.WindowsAndMessaging;
+using static Windows.Win32.PInvoke;
 
 namespace AutoKeyNet.WindowsHooks.Helper;
 
@@ -13,11 +17,26 @@ internal static class WindowHelper
     /// <returns>Title</returns>
     internal static string? GetActiveWindowTitle()
     {
-        const int nChars = 256;
-        var buff = new StringBuilder(nChars);
         var handle = GetForegroundWindow();
-
-        return GetWindowText(handle, buff, nChars) > 0 ? buff.ToString() : null;
+        if(handle == HWND.Null)
+            return null;
+        int bufferSize = GetWindowTextLength(handle) + 1;
+        unsafe
+        {
+            fixed (char* buff = new char[bufferSize])
+            {
+                if (GetWindowText(handle, buff, bufferSize) == 0)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    if (errorCode != 0)
+                    {
+                        throw new Win32Exception(errorCode);
+                    }
+                    return null;
+                }
+                return new string(buff);
+            }
+        }
     }
 
     /// <summary>
@@ -26,11 +45,24 @@ internal static class WindowHelper
     /// <returns>Title</returns>
     internal static string? GetActiveWindowClass()
     {
-        const int nChars = 256;
-        var buff = new StringBuilder(nChars);
         var handle = GetForegroundWindow();
-
-        return GetClassName(handle, buff, nChars) > 0 ? buff.ToString() : null;
+        if(handle == HWND.Null)
+            return null;
+        int bufferSize = 256;
+        unsafe
+        {
+            fixed (char* buff = new char[bufferSize])
+            {
+                if (GetClassName(handle, buff, bufferSize) == 0)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    if (errorCode != 0)
+                        throw new Win32Exception(errorCode);
+                    return null;
+                }
+                return new string(buff);
+            }
+        }
     }
 
     /// <summary>
@@ -39,26 +71,25 @@ internal static class WindowHelper
     /// <returns>Module name</returns>
     internal static string? GetActiveWindowModuleFileName()
     {
-        try
-        {
-            var handle = GetForegroundWindow();
-            if (handle == nint.Zero)
-                return null;
-            GetWindowThreadProcessId(handle, out var processId);
-            //Process p = Process.GetProcessById((int)processId);
-            Process[] processlist = Process.GetProcesses();
-            Process? p = processlist.FirstOrDefault(pr => pr.Id == (int)processId);
-            return p?.MainModule?.ModuleName;
-        }
-        catch (Win32Exception ex)
-        {
-            //EventLog Log = new EventLog();
-            //Log.Source = "AutoKeyNet";
-            //Log.WriteEntry(ex.Message, EventLogEntryType.Error);
-
-            // TODO: Необходимо выполнить логирование ошибки
-        }
-
+        var handle = GetForegroundWindow();
+        if (handle == HWND.Null)
+            return null;
+        Process[] processlist = Process.GetProcesses();
+        //unsafe
+        //{
+        //    uint processId;
+        //    fixed (uint* lpdwProcessId = &processId)
+        //    {
+        //        if (GetWindowThreadProcessId(handle, lpdwProcessId) == nint.Zero)
+        //        {
+        //            int errorCode = Marshal.GetLastWin32Error();
+        //            if (errorCode != 0)
+        //                throw new Win32Exception(errorCode);
+        //        }
+        //        Process? p = processlist.FirstOrDefault(pr => pr.Id == processId);
+        //        return p?.MainModule?.ModuleName;
+        //    }
+        //}
         return null;
     }
 
@@ -66,19 +97,27 @@ internal static class WindowHelper
     ///     This method returns the name of the focused control in the currently active window.
     /// </summary>
     /// <returns>Control name</returns>
-    internal static string? GetActiveWindowFocusControlName()
+    internal static unsafe string? GetActiveWindowFocusControlName()
     {
         var activeWindowHandle = GetForegroundWindow();
-        var activeWindowThread = GetWindowThreadProcessId(activeWindowHandle, out _);
-
-        if (!GetInfo((nint)activeWindowThread, out var info))
+        if (activeWindowHandle == HWND.Null)
             return null;
-        var focusedControlHandle = info.FocusedWindowHandle;
+        if (!GetInfo(activeWindowHandle, out var info))
+            return null;
+        var focusedControlHandle = info.hwndFocus;
 
-        var className = new StringBuilder(256);
-        return GetClassName(focusedControlHandle, className, className.Capacity) != 0
-            ? className.ToString()
-            : null;
+        int bufferSize = 256;
+        fixed (char* buff = new char[bufferSize])
+        {
+            if (GetClassName(focusedControlHandle, buff, bufferSize) == 0)
+            {
+                int errorCode = Marshal.GetLastWin32Error();
+                if (errorCode != 0)
+                    throw new Win32Exception(errorCode);
+                return null;
+            }
+            return new string(buff);
+        }
     }
 
 
@@ -88,12 +127,12 @@ internal static class WindowHelper
     /// <param name="hwnd">A handle to the window.</param>
     /// <param name="lpgui">Information describing the thread</param>
     /// <returns>If the function succeeds, the return value is true. If the function fails, the return value is false.</returns>
-    private static bool GetInfo(nint hwnd, out GuiThreadInfo lpgui)
+    private static unsafe bool GetInfo(HWND hwnd, out GUITHREADINFO lpgui)
     {
-        var threadId = GetWindowThreadProcessId(hwnd, out _);
+        var threadId = GetWindowThreadProcessId(hwnd);
 
-        lpgui = new GuiThreadInfo();
-        lpgui.Size = Marshal.SizeOf(lpgui);
+        lpgui = new GUITHREADINFO();
+        lpgui.cbSize = (uint)Marshal.SizeOf(lpgui);
 
         return GetGUIThreadInfo(threadId, ref lpgui);
     }

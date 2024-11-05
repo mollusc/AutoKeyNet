@@ -1,7 +1,8 @@
-﻿using AutoKeyNet.WindowsHooks.Helper;
+﻿using System.Runtime.InteropServices;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using AutoKeyNet.WindowsHooks.Helper;
 using AutoKeyNet.WindowsHooks.Rule;
-using AutoKeyNet.WindowsHooks.WinApi;
-using AutoKeyNet.WindowsHooks.WindowsEnums;
+using static Windows.Win32.PInvoke;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -16,87 +17,87 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
         {
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_V.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_V.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_V.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_V.ToInput(KeyEventFlags.KEYUP),
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(),
+                    VIRTUAL_KEY.VK_V.ToInput(),
+                    VIRTUAL_KEY.VK_V.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
                 ]),
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_C.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_C.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_C.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_C.ToInput(KeyEventFlags.KEYUP),
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(),
+                    VIRTUAL_KEY.VK_C.ToInput(),
+                    VIRTUAL_KEY.VK_C.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
                 ]),
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_B.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_B.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 PasteWithoutFormat()),
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_X.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_X.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_X.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_X.ToInput(KeyEventFlags.KEYUP),
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(),
+                    VIRTUAL_KEY.VK_X.ToInput(),
+                    VIRTUAL_KEY.VK_X.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
                 ]),
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_F.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_F.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_B.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_B.ToInput(KeyEventFlags.KEYUP),
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(),
+                    VIRTUAL_KEY.VK_B.ToInput(),
+                    VIRTUAL_KEY.VK_B.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
                 ]),
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_D.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_D.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_I.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_I.ToInput(KeyEventFlags.KEYUP),
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(),
+                    VIRTUAL_KEY.VK_I.ToInput(),
+                    VIRTUAL_KEY.VK_I.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
                 ]),
             new HotKeyRuleRecord(
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_G.ToInput(KeyEventFlags.KEYDOWN, NativeMethods.KEY_SUPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(),
+                    VIRTUAL_KEY.VK_G.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                 ],
                 [
-                    VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_U.ToInput(KeyEventFlags.KEYDOWN),
-                    VirtualKey.KEY_U.ToInput(KeyEventFlags.KEYUP),
-                    VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(),
+                    VIRTUAL_KEY.VK_U.ToInput(),
+                    VIRTUAL_KEY.VK_U.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
                 ]),
         };
         return rules;
@@ -113,15 +114,17 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
         return () =>
         {
             Clipboard.SetText(GetTextFromClipboardWithoutFormat());
-            NativeMethods.SendInputAsync(
+            Span<INPUT> inputs = new Span<INPUT>(
             [
-                VirtualKey.LBUTTON.ToInput(KeyEventFlags.KEYUP),
+                VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYDOWN),
-                VirtualKey.KEY_V.ToInput(KeyEventFlags.KEYDOWN),
-                VirtualKey.KEY_V.ToInput(KeyEventFlags.KEYUP),
-                VirtualKey.CONTROL.ToInput(KeyEventFlags.KEYUP)
-            ]).ConfigureAwait(false);
+                VIRTUAL_KEY.VK_CONTROL.ToInput((KEYBD_EVENT_FLAGS) 0),
+                VIRTUAL_KEY.VK_V.ToInput(),
+                VIRTUAL_KEY.VK_V.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
+            ]
+                );
+            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
         };
     }
 

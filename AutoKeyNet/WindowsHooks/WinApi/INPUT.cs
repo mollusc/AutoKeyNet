@@ -7,7 +7,7 @@ namespace Windows.Win32
 {
     namespace UI.Input.KeyboardAndMouse
     {
-        internal partial struct INPUT
+        public partial struct INPUT
         {
             public override string ToString()
             {

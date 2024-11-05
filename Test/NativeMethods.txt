@@ -1,0 +1,9 @@
+﻿HWND_BROADCAST
+KLF_ACTIVATE
+LoadKeyboardLayout
+PostMessage
+SendInput
+SetForegroundWindow
+ShowWindow
+SW_MAXIMIZE
+WM_INPUTLANGCHANGEREQUEST
