@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using System.Text;
 using Windows.Win32.Foundation;
@@ -5,7 +6,7 @@ using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.TextServices;
 using static Windows.Win32.PInvoke;
 
-namespace AutoKeyNet.WindowsHooks.Helper;
+namespace AutoKeyNet.Helper;
 
 /// <summary>
 ///     Extension methods for virtual keys
@@ -34,7 +35,7 @@ public static class VirtualKeyExtension
         VIRTUAL_KEY.VK_XBUTTON2 when flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XUP.ToInput(Constants.XBUTTON2),
         VIRTUAL_KEY.VK_XBUTTON2 when !flags.HasFlag(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP) => MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN.ToInput(Constants.XBUTTON2),
 
-        _ => GetKeyboardInput(virtualKey, flags, extraInfo) 
+        _ => GetKeyboardInput(virtualKey, flags, extraInfo)
     };
 
     /// <summary>
@@ -48,9 +49,9 @@ public static class VirtualKeyExtension
         new()
         {
             type = INPUT_TYPE.INPUT_KEYBOARD,
-            Anonymous = new ()
+            Anonymous = new()
             {
-                ki = new ()
+                ki = new()
                 {
                     wVk = virtualKey,
                     wScan = (ushort)MapVirtualKey((uint)virtualKey, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC),
@@ -76,55 +77,51 @@ public static class VirtualKeyExtension
 
     /// <summary>
     ///     Converts a virtual key code to the corresponding Unicode character,
-    ///     taking into account the current keyboard layout. If the virtual key code does
-    ///     not have a corresponding character in the current layout, the method returns the null character ('\0').
+    ///     taking into account the current keyboard layout.If the virtual key code does
+    ///     not have a corresponding character in the current layout, the method returns the null character('\0').
     /// </summary>
-    /// <param name="vkCode">Virtual key code</param>
-    /// <param name="isInvariantCulture">
-    ///     If parameter is set to false, the method will not take into
+    /// <param name = "vkCode" > Virtual key code</param>
+    /// <param name = "isInvariantCulture" >
+    /// If parameter is set to false, the method will not take into
     ///     account the current language keyboard layout
     /// </param>
     /// <returns>Unicode character</returns>
-    //public static unsafe char ToUnicode(VIRTUAL_KEY vkCode, bool isInvariantCulture = false)
-    //{
-    //    var sbString = new StringBuilder(5);
-    //    var bKeyState = new byte[256];
-    //    GetKeyState((int)VIRTUAL_KEY.VK_SHIFT);
-    //    GetKeyState((int)VIRTUAL_KEY.VK_MENU);
-    //    var bKeyStateStatus = GetKeyboardState(bKeyState);
-    //    if (!bKeyStateStatus)
-    //        return '\0';
+    public static char ToUnicode(this VIRTUAL_KEY vkCode, bool isInvariantCulture = false)
+    {
+        var bKeyState = new byte[256];
+        GetKeyState((int)VIRTUAL_KEY.VK_SHIFT);
+        GetKeyState((int)VIRTUAL_KEY.VK_MENU);
+        var bKeyStateStatus = GetKeyboardState(bKeyState);
+        if (!bKeyStateStatus)
+            return '\0';
 
-    //    var hkl = new HKL(IntPtr.Zero);
-    //    var lScanCode = MapVirtualKey((uint)vkCode, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC);
-    //    if (!isInvariantCulture)
-    //    {
-    //        var focusedHWnd = GetForegroundWindow();
-    //        var activeThread = GetWindowThreadProcessId(focusedHWnd);
-    //        hkl = GetKeyboardLayout(activeThread);
-    //    }
+        var hkl = new HKL(nint.Zero);
+        var lScanCode = MapVirtualKey((uint)vkCode, MAP_VIRTUAL_KEY_TYPE.MAPVK_VK_TO_VSC);
+        unsafe
+        {
+            if (!isInvariantCulture)
+            {
+                var focusedHWnd = GetForegroundWindow();
+                var activeThread = GetWindowThreadProcessId(focusedHWnd);
+                hkl = GetKeyboardLayout(activeThread);
+            }
 
-    //    // Allocate unmanaged memory for PWSTR
-    //    IntPtr pwstr = Marshal.AllocHGlobal(5 * sizeof(char));
-    //    try
-    //    {
-    //        var pwszBuff = new PWSTR((char*)pwstr);
 
-    //        int result = ToUnicodeEx((uint)vkCode, lScanCode, bKeyState.AsSpan(), pwszBuff, 5, 0, hkl);
-    //        if (result > 0)
-    //        {
-    //            // Marshal the result back to a managed string
-    //            string resultString = Marshal.PtrToStringUni(pwstr);
-    //            return resultString[0];
-    //        }
-    //        else
-    //        {
-    //            return '\0';
-    //        }
-    //    }
-    //    finally
-    //    {
-    //        Marshal.FreeHGlobal(pwstr);
-    //    }
-    //}
+            char[] buff = new char[5];
+            fixed (char* pwszBuff = buff)
+            fixed (byte* pBkeystate = bKeyState)
+            {
+                if (ToUnicodeEx((uint)vkCode, lScanCode, pBkeystate, pwszBuff, 5, 0, hkl) == 0)
+                {
+                    int errorCode = Marshal.GetLastWin32Error();
+                    if (errorCode != 0)
+                    {
+                        throw new Win32Exception(errorCode);
+                    }
+                    return '\0';
+                }
+                return new string(pwszBuff)[0];
+            }
+        }
+    }
 }

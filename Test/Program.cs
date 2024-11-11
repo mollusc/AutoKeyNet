@@ -1,6 +1,6 @@
 using System.Diagnostics;
-using AutoKeyNet.WindowsHooks.Facades;
-using AutoKeyNet.WindowsHooks.Rule;
+using AutoKeyNet.Facades;
+using AutoKeyNet.RuleRecords;
 using AutoKeyNetApp.RuleFactory;
 
 namespace AutoKeyNetApp;
@@ -38,7 +38,7 @@ internal static class Program
         BaseRuleFactory[] ruleFactories =
         {
             new ShiftRule(),
-            //new HotStringRuleFactory(),
+            new HotStringRuleFactory(),
             new HotKeyLButtonRuleFactory(),
             new HotKeyProgramRuleFactory(),
             //new OutlookRuleFactory()

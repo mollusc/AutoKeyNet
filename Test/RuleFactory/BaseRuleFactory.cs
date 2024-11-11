@@ -1,4 +1,4 @@
-﻿using AutoKeyNet.WindowsHooks.Rule;
+﻿using AutoKeyNet.RuleRecords;
 using Microsoft.Extensions.Configuration;
 
 namespace AutoKeyNetApp.RuleFactory;

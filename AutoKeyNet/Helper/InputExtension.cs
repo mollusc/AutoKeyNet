@@ -1,32 +1,42 @@
-﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
-using static AutoKeyNet.WindowsHooks.Helper.Constants;
+﻿using System.Runtime.InteropServices;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using static AutoKeyNet.Helper.Constants;
+using static Windows.Win32.PInvoke;
 
-namespace AutoKeyNet.WindowsHooks.Helper;
+namespace AutoKeyNet.Helper;
 
-internal static class InputExtension
+public static class InputExtension
 {
     /// <summary>
     ///     Converts keyboard inputs and mouse inputs to virtual keys.
     /// </summary>
     /// <param name="inputs">Inputs to convert</param>
     /// <returns>Virtual keys</returns>
-    public static IEnumerable<VIRTUAL_KEY> ToVIRTUAL_KEYs(this IEnumerable<INPUT> inputs) =>
-        inputs.Select(i => i.ToVIRTUAL_KEY());
+    public static IEnumerable<VIRTUAL_KEY> ToVirtualKeys(this IEnumerable<INPUT> inputs) =>
+        inputs.Select(i => i.ToVirtualKey());
+
+    public static void Send(this INPUT[] inputs) =>
+        Send(inputs);
+
+    public static void Send(this List<INPUT> inputs) =>
+        Send(CollectionsMarshal.AsSpan(inputs));
+    public static void Send(this Span<INPUT> inputs) =>
+        SendInput(inputs, Marshal.SizeOf<INPUT>());
 
     /// <summary>
     ///     Converts keyboard input and mouse input to a virtual key.
     /// </summary>
     /// <param name="input">Input to convert</param>
     /// <returns>A virtual key</returns>
-    public static VIRTUAL_KEY ToVIRTUAL_KEY(this INPUT input) =>
-        input.type == INPUT_TYPE.INPUT_KEYBOARD ? input.Anonymous.ki.wVk : input.Anonymous.mi.ToVIRTUAL_KEY();
+    public static VIRTUAL_KEY ToVirtualKey(this INPUT input) =>
+        input.type == INPUT_TYPE.INPUT_KEYBOARD ? input.Anonymous.ki.wVk : input.Anonymous.mi.ToVirtualKey();
 
     /// <summary>
     ///     Converts mouse input to a virtual key.
     /// </summary>
     /// <param name="uMi">Mouse input to convert</param>
     /// <returns>A virtual key</returns>
-    public static VIRTUAL_KEY ToVIRTUAL_KEY(this MOUSEINPUT uMi) =>
+    public static VIRTUAL_KEY ToVirtualKey(this MOUSEINPUT uMi) =>
         uMi.dwFlags switch
         {
             MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN => VIRTUAL_KEY.VK_LBUTTON,

@@ -1,8 +1,8 @@
 ﻿using System.Runtime.InteropServices;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
-using AutoKeyNet.WindowsHooks.Helper;
-using AutoKeyNet.WindowsHooks.Rule;
 using static Windows.Win32.PInvoke;
+using AutoKeyNet.Helper;
+using AutoKeyNet.RuleRecords;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -115,16 +115,16 @@ internal class HotKeyLButtonRuleFactory : BaseRuleFactory
         {
             Clipboard.SetText(GetTextFromClipboardWithoutFormat());
             Span<INPUT> inputs = new Span<INPUT>(
-            [
-                VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                [
+                    VIRTUAL_KEY.VK_LBUTTON.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
 
-                VIRTUAL_KEY.VK_CONTROL.ToInput((KEYBD_EVENT_FLAGS) 0),
-                VIRTUAL_KEY.VK_V.ToInput(),
-                VIRTUAL_KEY.VK_V.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
-                VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
-            ]
-                );
-            SendInput(inputs, Marshal.SizeOf(typeof(INPUT)));
+                    VIRTUAL_KEY.VK_CONTROL.ToInput((KEYBD_EVENT_FLAGS)0),
+                    VIRTUAL_KEY.VK_V.ToInput(),
+                    VIRTUAL_KEY.VK_V.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP),
+                    VIRTUAL_KEY.VK_CONTROL.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
+                ]
+            );
+            inputs.Send();
         };
     }
 

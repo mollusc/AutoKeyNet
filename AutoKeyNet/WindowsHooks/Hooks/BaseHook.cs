@@ -1,5 +1,4 @@
-﻿using Windows.Win32.UI.WindowsAndMessaging;
-using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+﻿using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 
 namespace AutoKeyNet.WindowsHooks.Hooks;
 
@@ -56,9 +55,9 @@ internal abstract class BaseHook<TBaseEventArgs> : IDisposable where TBaseEventA
     protected abstract void Unhook();
 
     /// <summary>
-    ///  Invocation of the event handler
+    ///     Invocation of the event handler
     /// </summary>
-    protected virtual void OnHookEvent(TBaseEventArgs e)
+    protected internal virtual void OnHookEvent(TBaseEventArgs e)
     {
         HookEvent?.Invoke(this, e);
     }

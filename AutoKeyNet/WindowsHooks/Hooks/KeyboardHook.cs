@@ -1,9 +1,10 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
-using AutoKeyNet.WindowsHooks.Helper;
+using AutoKeyNet.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using static Windows.Win32.PInvoke;
 
@@ -34,14 +35,25 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
     /// <returns>Identifier for the hook</returns>
     protected override nint SetHook()
     {
-        using Process curProcess = Process.GetCurrentProcess();
-        using ProcessModule? curModule = curProcess.MainModule;
-        using var hMode = GetModuleHandle(curModule?.ModuleName);
-        var hModePtr = new HINSTANCE(hMode.DangerousGetHandle());
-        var hookHandle = SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, _hookCallback, hModePtr, 0);
+        using var curProcess = Process.GetCurrentProcess();
+        using var curModule = curProcess.MainModule;
+        HMODULE hModule;
+        unsafe
+        {
+            fixed (char* lpModuleName = curModule?.ModuleName)
+            {
+                hModule = GetModuleHandle(lpModuleName);
+            }
+        }
+
+        var hookHandle = SetWindowsHookEx(WINDOWS_HOOK_ID.WH_KEYBOARD_LL, _hookCallback, hModule, 0);
 
         if (hookHandle == HHOOK.Null)
-            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+        {
+            var errorCode = Marshal.GetLastWin32Error();
+            if (errorCode != 0)
+                throw new Win32Exception(errorCode);
+        }
 
         return hookHandle;
     }
@@ -91,7 +103,7 @@ internal class KeyboardHook : BaseHook<HookEventArgs>
 
                 OnHookEvent(keyboardHookEventArgs);
                 if (keyboardHookEventArgs.Cancel)
-                    return new LRESULT(1);
+                    return (LRESULT)1;
             }
         }
 

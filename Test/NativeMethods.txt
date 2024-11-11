@@ -2,7 +2,6 @@
 KLF_ACTIVATE
 LoadKeyboardLayout
 PostMessage
-SendInput
 SetForegroundWindow
 ShowWindow
 SW_MAXIMIZE

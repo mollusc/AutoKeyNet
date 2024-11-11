@@ -33,3 +33,6 @@ WM_SYSKEYDOWN
 WM_XBUTTONDOWN
 WM_XBUTTONUP
 ToUnicodeEx
+VkKeyScan
+VkKeyScanEx
+LoadKeyboardLayout

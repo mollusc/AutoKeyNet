@@ -2,9 +2,9 @@
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
-using AutoKeyNet.WindowsHooks.Helper;
-using AutoKeyNet.WindowsHooks.Rule;
 using static Windows.Win32.PInvoke;
+using AutoKeyNet.Helper;
+using AutoKeyNet.RuleRecords;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -18,7 +18,7 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
         return
         [
             new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
                     VIRTUAL_KEY.VK_XBUTTON1.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                 ],
@@ -28,47 +28,47 @@ internal class HotKeyProgramRuleFactory : BaseRuleFactory
                 ]),
 
 
-            new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_T.ToInput((KEYBD_EVENT_FLAGS)0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_T.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
-                        Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
-                        Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                ],
-                () => { }),
+            //new HotKeyRuleRecord([
+            //        VIRTUAL_KEY.VK_XBUTTON1.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
+            //        VIRTUAL_KEY.VK_X.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
+            //        VIRTUAL_KEY.VK_X.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
+            //            Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
+            //        VIRTUAL_KEY.VK_XBUTTON1.ToInput(KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP,
+            //            Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
+            //    ],
+            //    () => { }),
 
             new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_T.ToInput((KEYBD_EVENT_FLAGS)0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
+                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
+                    VIRTUAL_KEY.VK_T.ToInput(0, Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                 ],
                 () => RunProgram("TOTALCMD64", "C:\\Program Files (x86)\\Total Commander\\TOTALCMD64.EXE")),
 
             new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_X.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_X.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                 ],
                 () => RunProgram("iexplore", "C:\\Program Files\\Internet Explorer\\iexplore.exe")),
             new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_E.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_E.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                 ],
                 () => RunProgram("EXCEL", "c:\\Program Files\\Microsoft Office\\Office15\\EXCEL.EXE")),
             new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_W.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_W.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                 ],
                 () => RunProgram("WINWORD", "c:\\Program Files\\Microsoft Office\\Office15\\WINWORD.EXE")),
             new HotKeyRuleRecord([
-                    VIRTUAL_KEY.VK_XBUTTON1.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_XBUTTON1.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR),
-                    VIRTUAL_KEY.VK_S.ToInput((KEYBD_EVENT_FLAGS)0,
+                    VIRTUAL_KEY.VK_S.ToInput(0,
                         Constants.KEY_SUPPRESS_NATIVE_BEHAVIOUR)
                 ],
                 () => RunProgram("OUTLOOK", "C:\\Program Files\\Microsoft Office\\Office15\\OUTLOOK.EXE")),

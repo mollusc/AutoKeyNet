@@ -1,6 +1,6 @@
 ﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
 
-namespace AutoKeyNet.WindowsHooks.Helper;
+namespace AutoKeyNet.Helper;
 
 public static class MouseEventExtension
 {
@@ -16,9 +16,9 @@ public static class MouseEventExtension
         new()
         {
             type = INPUT_TYPE.INPUT_MOUSE,
-            Anonymous = new ()
+            Anonymous = new()
             {
-                mi = new ()
+                mi = new()
                 {
                     dwFlags = mouseEvent,
                     mouseData = mouseData,

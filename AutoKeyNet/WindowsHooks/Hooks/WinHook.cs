@@ -1,7 +1,6 @@
 ﻿using Windows.Win32.Foundation;
 using Windows.Win32.UI.Accessibility;
-using Windows.Win32.UI.WindowsAndMessaging;
-using AutoKeyNet.WindowsHooks.Helper;
+using AutoKeyNet.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using static Windows.Win32.PInvoke;
 
@@ -32,7 +31,7 @@ internal class WinHook : BaseHook<WinBaseHookEventArgs>
     /// <returns>Identifier for the hook</returns>
     protected override nint SetHook()
     {
-        return SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, HMODULE.Null, 
+        return SetWinEventHook(EVENT_SYSTEM_FOREGROUND, EVENT_SYSTEM_FOREGROUND, HMODULE.Null,
             _hookEvent, 0, 0, WINEVENT_OUTOFCONTEXT);
     }
 

@@ -6,7 +6,7 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace AutoKeyNet.WindowsHooks.Helper
+namespace AutoKeyNet.Helper
 {
     public static class EnumExtensions
     {

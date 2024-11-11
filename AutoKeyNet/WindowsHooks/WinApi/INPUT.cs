@@ -1,7 +1,7 @@
 ﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Accessibility;
-using AutoKeyNet.WindowsHooks.Helper;
 using static Windows.Win32.PInvoke;
+using AutoKeyNet.Helper;
 
 namespace Windows.Win32
 {
@@ -22,7 +22,7 @@ namespace Windows.Win32
                             KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP => "↑",
                             _ => "↓",
                         };
-                        return $"{vk.GetDisplayName() ?? vk.ToString()}{eventFlag}";
+                        return $"{vk.GetDisplayName() ?? vk.ToString()}({(char.IsLetterOrDigit(vk.ToUnicode())?vk.ToUnicode():"")}){eventFlag}";
                     case INPUT_TYPE.INPUT_HARDWARE:
                         return "HardWare: " + Anonymous.hi.uMsg;
                     default:

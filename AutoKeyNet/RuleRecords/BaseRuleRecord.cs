@@ -1,7 +1,6 @@
 using Windows.Win32.UI.Input.KeyboardAndMouse;
-using AutoKeyNet.WindowsHooks.Helper;
 
-namespace AutoKeyNet.WindowsHooks.Rule;
+namespace AutoKeyNet.RuleRecords;
 
 /// <summary>
 ///     Base class for rules
@@ -27,12 +26,12 @@ public class BaseRuleRecord
     /// <summary>
     ///     Text of the rule that triggers the rule's action (Run).
     /// </summary>
-    public string KeyText { get; }
+    public char[] KeyChars { get; }
 
     /// <summary>
     ///     Array of Inputs struct for the rule that triggers the rule's action (Run).
     /// </summary>
-    internal INPUT[] KeyInputs { get; }
+    internal INPUT[]? KeyInputs { get; }
 
     /// <summary>
     ///     Action that is triggered when the rule is fired.
@@ -42,22 +41,22 @@ public class BaseRuleRecord
     /// <summary>
     ///     Constructor of rule
     /// </summary>
-    /// <param name="keyText">Text of the rule that triggers the rule's action (Run).</param>
-    /// <param name="run">Action that is triggered when the rule is fired.</param>
-    /// <param name="checkWindowCondition">Check the rule of the current window or control.</param>
-    //protected BaseRuleRecord(string keyText, Action run, WindowCondition? checkWindowCondition) :
-    //    this(keyText.ToInputs().ToArray(), keyText, run, checkWindowCondition)
-    //{
-    //}
-
-    protected BaseRuleRecord(INPUT[] hotKeys, Action run, WindowCondition? checkWindowCondition) :
-        this(hotKeys, string.Join(" ", hotKeys.Select(h => $"[{h.ToString()}]")), run, checkWindowCondition)
+    /// <param name = "keyChars" > Text of the rule that triggers the rule's action (Run).</param>
+    /// <param name = "run" > Action that is triggered when the rule is fired.</param>
+    /// <param name = "checkWindowCondition" > Check the rule of the current window or control.</param>
+    protected BaseRuleRecord(char[] keyChars, Action run, WindowCondition? checkWindowCondition) :
+        this(null, keyChars, run, checkWindowCondition)
     {
     }
-    private BaseRuleRecord(INPUT[] keyInputs, string keyText, Action run, WindowCondition? checkWindowCondition)
+
+    protected BaseRuleRecord(INPUT[] hotKeys, Action run, WindowCondition? checkWindowCondition) :
+        this(hotKeys, string.Join(" ", hotKeys.Select(h => $"[{h.ToString()}]")).ToCharArray(), run, checkWindowCondition)
+    {
+    }
+    private BaseRuleRecord(INPUT[]? keyInputs, char[] keyChars, Action run, WindowCondition? checkWindowCondition)
     {
         KeyInputs = keyInputs;
-        KeyText = keyText;
+        KeyChars = keyChars;
         Run = run;
         CheckWindowCondition = checkWindowCondition;
     }

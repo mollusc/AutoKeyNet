@@ -1,9 +1,11 @@
-﻿namespace AutoKeyNet.WindowsHooks.Helper;
+﻿using Windows.Win32.UI.Input.KeyboardAndMouse;
+
+namespace AutoKeyNet.Helper;
 
 /// <summary>
 ///     Extension methods for the string data type.
 /// </summary>
-internal static class StringExtension
+public static class StringExtension
 {
     ///// <summary>
     /////     Dictionary with virtual keys
@@ -35,6 +37,23 @@ internal static class StringExtension
     //        { "DOWN", KEYBD_EVENT_FLAGS.KEYDOWN }
     //    };
 
+    /// <summary>
+    ///     A method that converts a string object to Input structures.
+    ///     This method allows for the use of tags to represent special keys such as "{LEFT}" and "{RIGHT}"
+    /// </summary>
+    /// <param name="text">Text</param>
+    /// <param name="extraInfo">An additional value associated with the keystroke</param>
+    /// <returns>Input structures that represent the text</returns>
+    public static INPUT[] ToUnicodeInputs(this string text, nuint extraInfo = Constants.KEY_IGNORE)
+    {
+        INPUT[] inputs = new INPUT[text.Length];
+        for (var i = 0; i < text.Length; i++)
+        {
+            var c = text[i];
+            inputs[i] = c.ToUnicodeInput();
+        }
+        return inputs;
+    }
     ///// <summary>
     /////     A method that converts a string object to Input structures.
     /////     This method allows for the use of tags to represent special keys such as "{LEFT}" and "{RIGHT}"

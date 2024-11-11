@@ -1,11 +1,13 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Runtime.InteropServices;
 using Windows.Win32.Foundation;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using Windows.Win32.UI.WindowsAndMessaging;
-using AutoKeyNet.WindowsHooks.Helper;
+using AutoKeyNet.Helper;
 using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
 using static Windows.Win32.PInvoke;
+
 namespace AutoKeyNet.WindowsHooks.Hooks;
 
 /// <summary>
@@ -33,15 +35,24 @@ internal class MouseHook : BaseHook<HookEventArgs>
     /// <returns>Identifier for the hook</returns>
     protected override IntPtr SetHook()
     {
-        using Process curProcess = Process.GetCurrentProcess();
-        using ProcessModule? curModule = curProcess.MainModule;
-        using var hMode = GetModuleHandle(curModule?.ModuleName);
-        var hModePtr = new HINSTANCE(hMode.DangerousGetHandle());
-        var hookHandle = SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, _hookCallback, hModePtr, 0);
-
-        if (hookHandle == IntPtr.Zero)
+        using var curProcess = Process.GetCurrentProcess();
+        using var curModule = curProcess.MainModule;
+        HMODULE hModule;
+        unsafe
         {
-            throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+            fixed (char* lpModuleName = curModule?.ModuleName)
+            {
+                hModule = GetModuleHandle(lpModuleName);
+            }
+        }
+
+        var hookHandle = SetWindowsHookEx(WINDOWS_HOOK_ID.WH_MOUSE_LL, _hookCallback, hModule, 0);
+
+        if (hookHandle == HHOOK.Null)
+        {
+            var errorCode = Marshal.GetLastWin32Error();
+            if (errorCode != 0)
+                throw new Win32Exception(errorCode);
         }
 
         return hookHandle;
@@ -104,7 +115,7 @@ internal class MouseHook : BaseHook<HookEventArgs>
 
                 OnHookEvent(mouseHookEventArgs);
                 if (mouseHookEventArgs.Cancel)
-                    return new LRESULT(1);
+                    return (LRESULT)1;
             }
         }
 
