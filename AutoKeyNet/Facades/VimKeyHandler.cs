@@ -1,228 +1,205 @@
-﻿//using System.Diagnostics;
-//using System.Runtime.InteropServices;
-//using AutoKeyNet.WindowsHooks.Hooks;
-//using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
-//using AutoKeyNet.WindowsHooks.Rule;
-//using AutoKeyNet.WindowsHooks.WindowsEnums;
-//using AutoKeyNet.WindowsHooks.WindowsStruct;
+﻿using System.Diagnostics;
+using Windows.Win32.UI.Input.KeyboardAndMouse;
+using AutoKeyNet.Helper;
+using AutoKeyNet.RuleRecords;
+using AutoKeyNet.WindowsHooks.Hooks;
+using AutoKeyNet.WindowsHooks.Hooks.EventArgs;
+using Microsoft.VisualStudio.Services.Common;
 
-//namespace AutoKeyNet.WindowsHooks.Facades;
+namespace AutoKeyNet.Facades;
 
-///// <summary>
-/////     Class for emulating Vim commands
-///// </summary>
-//internal class VimKeyHandler : BaseKeyHandler, IDisposable
-//{
-//    /// <summary>
-//    ///     Time in milliseconds to wait for a mapped sequence to complete
-//    /// </summary>
-//    private const int TimeoutLen = 500;
+/// <summary>
+///     Class for emulating Vim commands
+/// </summary>
+internal class VimKeyHandler : BaseKeyHandler
+{
+    /// <summary>
+    ///     Time in milliseconds to wait for a mapped sequence to complete
+    /// </summary>
+    private const int TimeoutLen = 500;
 
-//    /// <summary>
-//    ///     Array of virtual keys that trigger the clearing of the buffer
-//    /// </summary>
-//    private readonly HashSet<ushort> _clearBufferKey = new()
-//    {
-//        (ushort)VIRTUAL_KEY.RIGHT,
-//        (ushort)VIRTUAL_KEY.LEFT,
-//        (ushort)VIRTUAL_KEY.UP,
-//        (ushort)VIRTUAL_KEY.DOWN,
-//        (ushort)VIRTUAL_KEY.END,
-//        (ushort)VIRTUAL_KEY.HOME
-//    };
+    /// <summary>
+    ///     Array of virtual keys that trigger the clearing of the buffer
+    /// </summary>
+    private static readonly HashSet<VIRTUAL_KEY> ClearBufferKey =
+    [
+        VIRTUAL_KEY.VK_RIGHT,
+        VIRTUAL_KEY.VK_LEFT,
+        VIRTUAL_KEY.VK_UP,
+        VIRTUAL_KEY.VK_DOWN,
+        VIRTUAL_KEY.VK_END,
+        VIRTUAL_KEY.VK_HOME
+    ];
 
-//    /// <summary>
-//    ///     Keyboard hook
-//    /// </summary>
-//    private readonly KeyboardHook _keyboardHook;
+    private static readonly HashSet<MOUSE_EVENT_FLAGS> MouseEventFlagsToClearBuffer =
+    [
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTDOWN,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_LEFTUP,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTDOWN,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_RIGHTUP,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEDOWN,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_MIDDLEUP,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_XDOWN,
+        MOUSE_EVENT_FLAGS.MOUSEEVENTF_XUP
+    ];
 
-//    /// <summary>
-//    ///     Mouse hook
-//    /// </summary>
-//    private readonly MouseHook _mouseHook;
+    /// <summary>
+    ///     Buffer for pressed keys
+    /// </summary>
+    private readonly CircularBuffer<char> _buffer;
 
-//    /// <summary>
-//    ///     Windows hook
-//    /// </summary>
-//    private readonly WinHook _winHook;
+    /// <summary>
+    ///     Timestamp for when the last key was pressed.
+    /// </summary>
+    private uint _lastTimeStamp;
 
-//    /// <summary>
-//    ///     Buffer for pressed keys
-//    /// </summary>
-//    private string _buffer;
+    /// <summary>
+    ///     Cancellation token source for cancelling the triggering of rules.
+    /// </summary>
+    private CancellationTokenSource _source = new();
 
-//    /// <summary>
-//    ///     Timestamp for when the last key was pressed.
-//    /// </summary>
-//    private uint _lastTimeStamp;
-
-//    /// <summary>
-//    ///     Cancellation token source for cancelling the triggering of rules.
-//    /// </summary>
-//    private CancellationTokenSource _source = new();
-
-//    /// <summary>
-//    ///     Constructor of objects for emulating Vim commands.
-//    /// </summary>
-//    /// <param name="rules">List of rules</param>
-//    /// <param name="kbdHook">Keyboard hook</param>
-//    /// <param name="mouseHook">Mouse hook</param>
-//    /// <param name="winHook">Windows hook</param>
-//    public VimKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook,
-//        WinHook winHook) : base(rules)
-//    {
-//        _buffer = string.Empty;
-
-//        _winHook = winHook;
-//        _winHook.OnHookEvent += OnWinHookEvent;
-//        _mouseHook = mouseHook;
-//        _mouseHook.OnHookEvent += OnMouseHookEvent;
-//        _keyboardHook = kbdHook;
-//        _keyboardHook.OnHookEvent += OnKeyboardHookEvent;
-//    }
-
-//    /// <summary>
-//    ///     Method for disposing of hooks
-//    /// </summary>
-//    public void Dispose()
-//    {
-//        _winHook.OnHookEvent -= OnWinHookEvent;
-//        _mouseHook.OnHookEvent -= OnMouseHookEvent;
-//        _keyboardHook.OnHookEvent -= OnKeyboardHookEvent;
-//    }
-
-//    /// <summary>
-//    ///     Method for handling mouse events
-//    /// </summary>
-//    /// <param name="sender">Sender of the event</param>
-//    /// <param name="e">Event arguments</param>
-//    private void OnMouseHookEvent(object? sender, MouseHookEventArgs e)
-//    {
-//        if ((MouseMessage)e.WParam is MouseMessage.WM_LBUTTONDOWN or MouseMessage.WM_LBUTTONUP
-//            or MouseMessage.WM_LBUTTONDBLCLK or
-//            MouseMessage.WM_RBUTTONDOWN or MouseMessage.WM_RBUTTONUP or MouseMessage.WM_RBUTTONDBLCLK or
-//            MouseMessage.WM_MBUTTONDOWN or MouseMessage.WM_MBUTTONUP or MouseMessage.WM_MBUTTONDBLCLK)
-//            _buffer = string.Empty;
-//    }
-
-//    /// <summary>
-//    ///     Method for handling the event when the foreground window changes
-//    /// </summary>
-//    /// <param name="sender">Sender of the event</param>
-//    /// <param name="e">Event arguments</param>
-//    private void OnWinHookEvent(object? sender, WinBaseHookEventArgs e)
-//    {
-//        _buffer = string.Empty;
-//    }
-
-//    /// <summary>
-//    ///     Method for handling keyboard events
-//    /// </summary>
-//    /// <param name="sender">Sender of the event</param>
-//    /// <param name="e">Event arguments</param>
-//    private void OnKeyboardHookEvent(object? sender, KeyboardHookEventArgs e)
-//    {
-//        if (e.WParam == (nint)KeyboardMessage.WM_KEYDOWN)
-//        {
-//            var kbd = (KeyboardLowLevelHook)(Marshal.PtrToStructure(e.LParam, typeof(KeyboardLowLevelHook)) ??
-//                                             throw new InvalidOperationException());
-//            // Clear the buffer
-//            if (_clearBufferKey.Contains((ushort)kbd.VIRTUAL_KEY))
-//            {
-//                _buffer = string.Empty;
-//                return;
-//            }
-
-//            // Clear the buffer if the time between pressed keys is longer than TimeoutLen.
-//            if (kbd.Time - _lastTimeStamp > TimeoutLen)
-//                _buffer = string.Empty;
+    /// <summary>
+    ///     Constructor of objects for emulating Vim commands.
+    /// </summary>
+    /// <param name="rules">List of rules</param>
+    /// <param name="kbdHook">Keyboard hook</param>
+    /// <param name="mouseHook">Mouse hook</param>
+    /// <param name="winHook">Windows hook</param>
+    public VimKeyHandler(IEnumerable<BaseRuleRecord> rules, KeyboardHook kbdHook, MouseHook mouseHook,
+        WinHook winHook) : base(rules, kbdHook, mouseHook, winHook)
+    {
+        var bufferSize = Rules.Max(r => r.KeyChars.Length);
+        _buffer = new CircularBuffer<char>(bufferSize);
+    }
 
 
-//            var isFound = false;
-//            if (char.IsLetterOrDigit(e.InvariantLetter))
-//            {
-//                var newBuffer = _buffer + e.InvariantLetter;
-//                foreach (var rule in Rules)
-//                    if (rule is VimKeyRuleRecord vkRule
-//                        && (vkRule.CheckWindowCondition?.Invoke(e.WindowTitle, e.WindowClass, e.WindowModule,
-//                            e.WindowControl) ?? true)
-//                        && rule.KeyText.StartsWith(newBuffer))
-//                    {
-//                        isFound = true;
-//                        break;
-//                    }
+    /// <summary>
+    ///     Method for handling the event when the foreground window changes
+    /// </summary>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
+    protected override void OnWinHookEvent(object? sender, WinBaseHookEventArgs e)
+    {
+        _buffer.Clear();
+    }
 
-//                if (isFound)
-//                {
-//                    _buffer = newBuffer;
-//                    _lastTimeStamp = kbd.Time;
-//                    e.Cancel = true;
-//                    Debug.WriteLine($"{e.InvariantLetter} --> {_buffer}");
-//                    return;
-//                }
+    /// <summary>
+    ///     Method for handling mouse events
+    /// </summary>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
+    protected override void OnMouseHookEvent(object? sender, HookEventArgs e)
+    {
+        if (e.Input.type == INPUT_TYPE.INPUT_MOUSE
+            && MouseEventFlagsToClearBuffer.Contains(e.Input.Anonymous.mi.dwFlags))
+            _buffer.Clear();
+    }
 
-//                _buffer = string.Empty;
-//            }
-//        }
+    /// <summary>
+    ///     Method for handling keyboard events
+    /// </summary>
+    /// <param name="sender">Sender of the event</param>
+    /// <param name="e">Event arguments</param>
+    protected override void OnKeyboardHookEvent(object? sender, HookEventArgs e)
+    {
+        if (e.Input.type == INPUT_TYPE.INPUT_KEYBOARD)
+        {
+            KEYBDINPUT ki = e.Input.Anonymous.ki;
+            if (ki.dwFlags != KEYBD_EVENT_FLAGS.KEYEVENTF_KEYUP)
+            {
+                // Clear the buffer
+                if (ClearBufferKey.Contains(ki.wVk))
+                {
+                    _buffer.Clear();
+                    return;
+                }
 
-//        if (e.WParam == (nint)KeyboardMessage.WM_KEYUP)
-//            if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
-//                _buffer = string.Empty;
-//    }
+                // Clear the buffer if the time between pressed keys is longer than TimeoutLen.
+                if (ki.time - _lastTimeStamp > TimeoutLen)
+                    _buffer.Clear();
 
-//    /// <summary>
-//    ///     Method for checking rules
-//    /// </summary>
-//    /// <param name="windowTitle">
-//    ///     Title of the foreground window for filtering rules. If the variable is null, the filter is
-//    ///     not applied.
-//    /// </param>
-//    /// <param name="windowClass">
-//    ///     Class of the foreground window for filtering rules. If the variable is null, the filter is
-//    ///     not applied.
-//    /// </param>
-//    /// <param name="windowModule">
-//    ///     Module name (file *.exe) of the foreground window for filtering rules. If the variable is
-//    ///     null, the filter is not applied.
-//    /// </param>
-//    /// <param name="windowControl">
-//    ///     Name of the focused control for filtering rules. If the variable is null, the filter is not
-//    ///     applied.
-//    /// </param>
-//    /// <returns>True if a rule was triggered; otherwise, false.</returns>
-//    private bool CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
-//    {
-//        VimKeyRuleRecord? foundRule = null;
-//        var keysStartWithRules = false;
-//        foreach (var rule in Rules)
-//            if (rule is VimKeyRuleRecord vkRule
-//                && (vkRule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ?? true)
-//                && rule.KeyText.StartsWith(_buffer))
-//            {
-//                if (rule.KeyText.Length == _buffer.Length)
-//                {
-//                    foundRule = vkRule;
-//                    _source.Cancel();
-//                }
-//                else
-//                {
-//                    keysStartWithRules = true;
-//                }
 
-//                if (foundRule is not null && keysStartWithRules)
-//                {
-//                    _source = new CancellationTokenSource();
-//                    Task.Delay(TimeoutLen, _source.Token).ContinueWith(_ => foundRule.Run.Invoke(), _source.Token);
-//                    return false;
-//                }
-//            }
+                char invariantLetter = ki.wVk.ToUnicode(true);
+                if (char.IsLetterOrDigit(invariantLetter))
+                {
+                    _buffer.Add(invariantLetter);
+                    bool isSuppressedKeys = Rules.OfType<VimKeyRuleRecord>().Any(r =>
+                        r.KeyChars.Take(_buffer.Count).SequenceEqual(_buffer)
+                        && (r.CheckWindowCondition?.Invoke(e.WindowTitle, e.WindowClass, e.WindowModule,
+                            e.WindowControl) ?? true));
+                    if (isSuppressedKeys)
+                    {
+                        _lastTimeStamp = ki.time;
+                        e.Cancel = true;
+                        Debug.WriteLine($"vim: Add '{invariantLetter}' --> {_buffer}");
+                        return;
+                    }
 
-//        if (foundRule is not null)
-//        {
-//            foundRule.Run();
-//            return true;
-//        }
+                    _buffer.Clear();
+                }
+            }
+            else
+            {
+                if (CheckRules(e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl))
+                    _buffer.Clear();
+            }
+        }
+    }
 
-//        return false;
-//    }
-//}
+    /// <summary>
+    ///     Method for checking rules
+    /// </summary>
+    /// <param name="windowTitle">
+    ///     Title of the foreground window for filtering rules. If the variable is null, the filter is
+    ///     not applied.
+    /// </param>
+    /// <param name="windowClass">
+    ///     Class of the foreground window for filtering rules. If the variable is null, the filter is
+    ///     not applied.
+    /// </param>
+    /// <param name="windowModule">
+    ///     Module name (file *.exe) of the foreground window for filtering rules. If the variable is
+    ///     null, the filter is not applied.
+    /// </param>
+    /// <param name="windowControl">
+    ///     Name of the focused control for filtering rules. If the variable is null, the filter is not
+    ///     applied.
+    /// </param>
+    /// <returns>True if a rule was triggered; otherwise, false.</returns>
+    private bool CheckRules(string? windowTitle, string? windowClass, string? windowModule, string? windowControl)
+    {
+        VimKeyRuleRecord? foundRule = null;
+        var keysStartWithRules = false;
+        foreach (var rule in Rules)
+            if (rule is VimKeyRuleRecord vkRule
+                && (vkRule.CheckWindowCondition?.Invoke(windowTitle, windowClass, windowModule, windowControl) ??
+                    true)
+                && rule.KeyChars.Take(_buffer.Count).SequenceEqual(_buffer))
+            {
+                if (rule.KeyChars.Length == _buffer.Count)
+                {
+                    foundRule = vkRule;
+                    _source.Cancel();
+                }
+                else
+                {
+                    keysStartWithRules = true;
+                }
+
+                if (foundRule is not null && keysStartWithRules)
+                {
+                    _source = new CancellationTokenSource();
+                    Task.Delay(TimeoutLen, _source.Token).ContinueWith(_ => foundRule.Run.Invoke(), _source.Token);
+                    return false;
+                }
+            }
+
+        if (foundRule is not null)
+        {
+            foundRule.Run();
+            return true;
+        }
+
+        return false;
+    }
+}

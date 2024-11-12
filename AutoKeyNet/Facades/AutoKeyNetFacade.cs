@@ -12,7 +12,7 @@ public class AutoKeyNetFacade : IDisposable
     private readonly HotStringHandler _hotStringHandler;
     private readonly KeyboardHook _kbdHook;
     private readonly MouseHook _mouseHook;
-    //private readonly VimKeyHandler _vimKeyHandler;
+    private readonly VimKeyHandler _vimKeyHandler;
 
     private readonly WinHook _winHook;
 
@@ -29,7 +29,7 @@ public class AutoKeyNetFacade : IDisposable
         var baseRuleRecords = rules as BaseRuleRecord[] ?? rules.ToArray();
         _hotKeyHandler = new HotKeyHandler(baseRuleRecords.OfType<HotKeyRuleRecord>(), _kbdHook, _mouseHook, _winHook);
         _hotStringHandler = new HotStringHandler(baseRuleRecords.OfType<HotStringRuleRecord>(), _kbdHook, _mouseHook, _winHook);
-        //_vimKeyHandler = new VimKeyHandler(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
+        _vimKeyHandler = new VimKeyHandler(baseRuleRecords, _kbdHook, _mouseHook, _winHook);
     }
 
     /// <summary>
@@ -43,6 +43,6 @@ public class AutoKeyNetFacade : IDisposable
 
         _hotKeyHandler?.Dispose();
         _hotStringHandler?.Dispose();
-        //_vimKeyHandler?.Dispose();
+        _vimKeyHandler?.Dispose();
     }
 }

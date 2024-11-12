@@ -36,13 +36,13 @@ internal static class Program
     private static void InitializeRules()
     {
         BaseRuleFactory[] ruleFactories =
-        {
-            new ShiftRule(),
-            new HotStringRuleFactory(),
-            new HotKeyLButtonRuleFactory(),
-            new HotKeyProgramRuleFactory(),
-            //new OutlookRuleFactory()
-        };
+        [
+            //new ShiftRule(),
+            //new HotStringRuleFactory(),
+            //new HotKeyLButtonRuleFactory(),
+            //new HotKeyProgramRuleFactory(),
+            new OutlookRuleFactory()
+        ];
 
         foreach (var ruleFactory in ruleFactories)
             Rules.AddRange(ruleFactory.Create());

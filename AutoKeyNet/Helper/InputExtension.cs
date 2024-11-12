@@ -16,7 +16,7 @@ public static class InputExtension
         inputs.Select(i => i.ToVirtualKey());
 
     public static void Send(this INPUT[] inputs) =>
-        Send(inputs);
+        SendInput(inputs, Marshal.SizeOf<INPUT>());
 
     public static void Send(this List<INPUT> inputs) =>
         Send(CollectionsMarshal.AsSpan(inputs));
