@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using System.Text;
 using Windows.Win32.UI.Input.KeyboardAndMouse;
 using static Windows.Win32.PInvoke;
 
@@ -7,7 +8,7 @@ namespace AutoKeyNet.Helper;
 /// <summary>
 ///     Extension methods for the char type
 /// </summary>
-internal static class CharExtension
+public static class CharExtension
 {
     /// <summary>
     ///     Method for converting a character to an Input structure with a key down event
@@ -61,6 +62,16 @@ internal static class CharExtension
             }
         };
     }
+
+    public static string ToString(this char[] letters)
+    {
+        StringBuilder sb = new StringBuilder();
+        foreach (char c in letters)
+            sb.Append(c);
+        return sb.ToString();
+
+    }
+
 
     /// <summary>
     ///     Method for converting a character to an Input structure with a key down and key up events

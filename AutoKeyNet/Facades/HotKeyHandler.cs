@@ -98,7 +98,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
         if (_buffer is not null)
         {
             _buffer.Add(input);
-            Debug.WriteLine("info: " + string.Join(" ", _buffer.Where(FilterInput).Select(b => $"[{b}]")));
+            Debug.WriteLine($"info: {GetType().Name}: " + string.Join(" ", _buffer.Where(FilterInput).Select(b => $"[{b}]")));
             var firedRules = CheckRules(eWindowTitle, eWindowClass, eWindowModule, eWindowControl).ToArray();
             var isSuppressedKeys = _suppressedKeys.Any(inputs =>
                 _buffer.TakeLast(inputs.Count).SequenceEqual(inputs, new InputComparerByVKeyAndFlag()));
@@ -119,7 +119,7 @@ internal class HotKeyHandler : BaseKeyHandler, IDisposable
             if (firedRules.Any())
             {
                 firedRules.ForEach(r => r.Run.Invoke());
-                Debug.WriteLine("rule: " + string.Join(";\t", firedRules.Select(r => r.KeyChars)));
+                Debug.WriteLine($"rule: {GetType().Name}: " + string.Join(";\t", firedRules.Select(r => CharExtension.ToString(r.KeyChars))));
                 _pressedKeys.Clear();
             }
 

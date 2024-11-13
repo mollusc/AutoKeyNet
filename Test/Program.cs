@@ -37,10 +37,10 @@ internal static class Program
     {
         BaseRuleFactory[] ruleFactories =
         [
-            //new ShiftRule(),
-            //new HotStringRuleFactory(),
-            //new HotKeyLButtonRuleFactory(),
-            //new HotKeyProgramRuleFactory(),
+            new ShiftRule(),
+            new HotStringRuleFactory(),
+            new HotKeyLButtonRuleFactory(),
+            new HotKeyProgramRuleFactory(),
             new OutlookRuleFactory()
         ];
 

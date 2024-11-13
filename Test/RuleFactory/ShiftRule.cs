@@ -8,6 +8,7 @@ using static Windows.Win32.PInvoke;
 using AutoKeyNet.Helper;
 using AutoKeyNet.RuleRecords;
 using System.ComponentModel;
+using AutoKeyNetApp.Helper;
 
 namespace AutoKeyNetApp.RuleFactory;
 
@@ -64,8 +65,10 @@ internal class ShiftRule : BaseRuleFactory
                         throw new Win32Exception(errorCode);
                 }
                 PostMessage(HWND_BROADCAST, WM_INPUTLANGCHANGEREQUEST, 0, lParam);
+                TooltipHelper.ShowTooltip(language);
             }
             _timer?.Dispose();
         };
     }
+
 }

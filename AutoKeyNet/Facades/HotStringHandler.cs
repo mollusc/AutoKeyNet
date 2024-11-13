@@ -100,7 +100,7 @@ internal class HotStringHandler : BaseKeyHandler
                 if (char.IsLetterOrDigit(letter))
                 {
                     _buffer.Add(letter);
-                    Debug.WriteLine($"buffer: {string.Join("", _buffer)}");
+                    Debug.WriteLine($"info: {GetType().Name}: {_buffer}");
                 }
             }
             else
@@ -109,7 +109,11 @@ internal class HotStringHandler : BaseKeyHandler
                 if (EndWordCharacters.Contains(letter))
                 {
                     var firedRules = CheckRules(true, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl);
-                    firedRules.ForEach(r => r.Run.Invoke());
+                    firedRules.ForEach(r =>
+                    {
+                        r.Run.Invoke();
+                        Debug.WriteLine($"rule: {GetType().Name}: {CharExtension.ToString(r.KeyChars)}");
+                    });
                     _buffer.Clear();
                 }
                 else if (_buffer.Count > 0 && char.IsLetterOrDigit(letter))
@@ -117,11 +121,14 @@ internal class HotStringHandler : BaseKeyHandler
                     var firedRules = CheckRules(false, e.WindowTitle, e.WindowClass, e.WindowModule, e.WindowControl).ToArray();
                     if (firedRules.Any())
                     {
-                        firedRules.ForEach(r => r.Run.Invoke());
+                        firedRules.ForEach(r =>
+                        {
+                            r.Run.Invoke();
+                            Debug.WriteLine($"rule: {GetType().Name}: {CharExtension.ToString(r.KeyChars)}");
+                        });
                         _buffer.Clear();
                     }
                 }
-
             }
         }
     }

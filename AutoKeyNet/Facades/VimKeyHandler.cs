@@ -131,7 +131,7 @@ internal class VimKeyHandler : BaseKeyHandler
                     {
                         _lastTimeStamp = ki.time;
                         e.Cancel = true;
-                        Debug.WriteLine($"vim: Add '{invariantLetter}' --> {_buffer}");
+                        Debug.WriteLine($"info: {GetType().Name}: {_buffer}");
                         return;
                     }
 
@@ -189,14 +189,19 @@ internal class VimKeyHandler : BaseKeyHandler
                 if (foundRule is not null && keysStartWithRules)
                 {
                     _source = new CancellationTokenSource();
-                    Task.Delay(TimeoutLen, _source.Token).ContinueWith(_ => foundRule.Run.Invoke(), _source.Token);
+                    Task.Delay(TimeoutLen, _source.Token).ContinueWith(_ =>
+                    {
+                        foundRule.Run.Invoke();
+                        Debug.WriteLine($"rule: {GetType().Name}: {CharExtension.ToString(foundRule.KeyChars)}");
+                    }, _source.Token);
                     return false;
                 }
             }
 
         if (foundRule is not null)
         {
-            foundRule.Run();
+            foundRule.Run.Invoke();
+            Debug.WriteLine($"rule: {GetType().Name}: {CharExtension.ToString(foundRule.KeyChars)}");
             return true;
         }
 

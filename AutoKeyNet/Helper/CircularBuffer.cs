@@ -153,5 +153,13 @@ namespace AutoKeyNet.Helper
             Decrement(ref _end);
             --Count;
         }
+
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (T c in this)
+                sb.Append(c);
+            return sb.ToString();
+        }
     }
 }
